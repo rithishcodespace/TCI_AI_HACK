@@ -2,14 +2,11 @@ import React, { useState } from 'react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import LandingPage from './components/LandingPage';
 import Dashboard from './components/Dashboard';
-import AuthModal from './components/AuthModal';
+import AuthPage from './components/AuthPage';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState('landing'); // 'landing' | 'dashboard'
-  const [authModal, setAuthModal] = useState({
-    isOpen: false,
-    mode: 'signin', // 'signin' | 'signup'
-  });
+  const [currentView, setCurrentView] = useState('landing'); // 'landing' | 'auth' | 'dashboard'
+  const [authMode, setAuthMode] = useState('signin'); // 'signin' | 'signup'
 
   const [currentUser, setCurrentUser] = useState({
     name: 'Rithish',
@@ -17,48 +14,42 @@ export default function App() {
     role: 'student',
   });
 
-  // Google OAuth Client ID from .env, or fallback client ID for local dev
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '1088461528574-dummyclientidforvoiceofcustomer.apps.googleusercontent.com';
 
   const handleOpenAuth = (mode = 'signin') => {
-    setAuthModal({
-      isOpen: true,
-      mode: mode,
-    });
-  };
-
-  const handleCloseAuth = () => {
-    setAuthModal((prev) => ({ ...prev, isOpen: false }));
+    setAuthMode(mode);
+    setCurrentView('auth');
   };
 
   const handleAuthSuccess = (userData) => {
     setCurrentUser(userData);
-    handleCloseAuth();
     setCurrentView('dashboard');
   };
 
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
-      <div className="relative min-h-screen">
-        {currentView === 'landing' ? (
+      <div className="min-h-screen bg-white">
+        {currentView === 'landing' && (
           <LandingPage 
             onLoginClick={() => handleOpenAuth('signin')}
             onSignupClick={() => handleOpenAuth('signup')}
           />
-        ) : (
+        )}
+
+        {currentView === 'auth' && (
+          <AuthPage 
+            initialMode={authMode}
+            onAuthSuccess={handleAuthSuccess}
+            onBackToHome={() => setCurrentView('landing')}
+          />
+        )}
+
+        {currentView === 'dashboard' && (
           <Dashboard 
             currentUser={currentUser}
             onBackToLanding={() => setCurrentView('landing')}
           />
         )}
-
-        {/* Floating Auth Modal Overlay */}
-        <AuthModal 
-          isOpen={authModal.isOpen}
-          initialMode={authModal.mode}
-          onClose={handleCloseAuth}
-          onAuthSuccess={handleAuthSuccess}
-        />
       </div>
     </GoogleOAuthProvider>
   );
