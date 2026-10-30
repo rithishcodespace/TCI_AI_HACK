@@ -14,11 +14,20 @@ import {
   ArrowLeft
 } from 'lucide-react';
 
-export default function Dashboard({ onBackToLanding }) {
+export default function Dashboard({ currentUser = { name: 'Rithish', email: 'user@college.edu', role: 'student' }, onBackToLanding }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all-reviews');
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+
+  const roleLabels = {
+    student: 'Student',
+    canteen_manager: 'Canteen Manager',
+    admin: 'Administrator',
+  };
+
+  const currentRoleLabel = roleLabels[currentUser.role] || currentUser.role || 'Member';
+  const initial = (currentUser.name || 'U').charAt(0).toUpperCase();
 
   // Close mobile drawer on resize to desktop
   useEffect(() => {
@@ -236,17 +245,26 @@ export default function Dashboard({ onBackToLanding }) {
                 }}
                 className="flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-full hover:bg-slate-50 border border-slate-100 transition-all cursor-pointer"
               >
-                <div className="w-7 h-7 rounded-full bg-[#E0EDFF] text-[#2563EB] font-bold text-[13px] flex items-center justify-center select-none">
-                  R
+                <div className="w-7 h-7 rounded-full bg-[#E0EDFF] text-[#2563EB] font-bold text-[13px] flex items-center justify-center select-none overflow-hidden">
+                  {currentUser.avatar ? (
+                    <img src={currentUser.avatar} alt={currentUser.name} className="w-full h-full object-cover" />
+                  ) : (
+                    initial
+                  )}
                 </div>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400 stroke-[2.2]" />
               </button>
 
               {isProfileDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-slate-100 py-1.5 z-50">
-                  <div className="px-3.5 py-2 border-b border-slate-100">
-                    <p className="text-xs font-bold text-slate-800 truncate">Rithish</p>
-                    <p className="text-[10px] text-slate-400 truncate">user@voiceofcustomer.ai</p>
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-1.5 z-50 animate-in fade-in zoom-in-95">
+                  <div className="px-3.5 py-2.5 border-b border-slate-100">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold text-slate-800 truncate">{currentUser.name}</p>
+                      <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-100">
+                        {currentRoleLabel}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 truncate mt-0.5">{currentUser.email}</p>
                   </div>
                   <div className="py-1 text-slate-700 text-xs">
                     <button className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-slate-50 text-left">

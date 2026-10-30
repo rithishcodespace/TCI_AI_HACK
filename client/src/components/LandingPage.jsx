@@ -42,8 +42,8 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
               strokeLinejoin="round"
             />
           </svg>
-          <span className="text-[25px] font-[800] tracking-[-0.035em] text-[#0F172A] lowercase">
-            syncly
+          <span className="text-[21px] font-[800] tracking-tight text-[#0F172A]">
+            VoiceOfCustomer
           </span>
         </div>
 
