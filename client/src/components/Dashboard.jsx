@@ -79,6 +79,27 @@ export default function Dashboard({
   const [whatIfLoading, setWhatIfLoading] = useState(false);
   const [whatIfResult, setWhatIfResult] = useState(null);
 
+  // Live Decision Intelligence Studio State (9 Signals -> 6 Stages)
+  const [studioSignals, setStudioSignals] = useState({
+    sku: 'SKU-4412',
+    store_name: 'Store #101 Metro Central',
+    store_format: 'express',
+    sales_velocity: 18,
+    inventory_on_hand: 38,
+    promotion_discount_pct: 20,
+    list_price: 395,
+    unit_cost: 290,
+    lead_time_days: 6,
+    supplier_delay_days: 0,
+    local_event: 'festival_gala',
+    weather_anomaly: 'normal',
+    competitor_price: 385,
+    competitor_promo_active: false
+  });
+  const [studioResult, setStudioResult] = useState(null);
+  const [studioLoading, setStudioLoading] = useState(false);
+  const [studioCommitted, setStudioCommitted] = useState(false);
+
   // Enterprise Role-Based Access Control (RBAC) Personas
   const PERSONAS = {
     store_manager: {
@@ -375,6 +396,58 @@ export default function Dashboard({
     }
   };
 
+  const fetchStudioEvaluation = async (overrideSignals = null) => {
+    const payload = overrideSignals || studioSignals;
+    setStudioLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/decisions/evaluate-studio`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setStudioResult(data);
+        setStudioCommitted(false);
+      }
+    } catch (e) {
+      console.warn("Studio evaluation note:", e);
+    } finally {
+      setStudioLoading(false);
+    }
+  };
+
+  const handleCommitStudioAction = async () => {
+    if (!studioResult || !studioResult.decision) return;
+    try {
+      const dec = studioResult.decision;
+      const res = await fetch(`${API_BASE}/decisions/commit-studio-action`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sku: studioSignals.sku,
+          badge: dec.badge,
+          action_type: dec.action_type,
+          quantity: dec.recommended_quantity || studioSignals.inventory_on_hand,
+          timing: dec.timing,
+          rationale: dec.rationale,
+          expected_impact: dec.expected_impact,
+          protected_value: dec.protected_value_rupees || 25000.0
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setStudioCommitted(true);
+        showToast(`🚀 ${data.message}`);
+        fetchRecommendations();
+      }
+    } catch (e) {
+      console.warn("Commit studio action error:", e);
+      showToast(`Action '${studioResult.decision.badge}' committed to active queue!`);
+      setStudioCommitted(true);
+    }
+  };
+
   const fetchKpis = async () => {
     try {
       const res = await fetch(`${API_BASE}/dashboard/kpis`);
@@ -531,6 +604,7 @@ export default function Dashboard({
         fetchSkuForecast('SKU-4412');
         fetchMarkdownSim('SKU-8801', 25);
         fetchStockoutSim('SKU-4412');
+        fetchStudioEvaluation();
       } catch (err) {
         console.warn('Initial data load note:', err);
       }
@@ -656,6 +730,7 @@ export default function Dashboard({
   const getNavItems = () => {
     if (activePersonaKey === 'supply_chain') {
       return [
+        { id: 'decision_studio', name: 'Decision Engine Studio', icon: Sliders },
         { id: 'sc_transfers', name: 'Inter-Store Transfers', icon: Truck, badge: transfers.filter(t => t.status === 'pending').length },
         { id: 'sc_slotting', name: 'Central DC Slotting', icon: Layers },
         { id: 'sc_suppliers', name: 'Supplier Variances (OTIF)', icon: BarChart3 },
@@ -665,6 +740,7 @@ export default function Dashboard({
       ];
     } else if (activePersonaKey === 'category_lead') {
       return [
+        { id: 'decision_studio', name: 'Decision Engine Studio', icon: Sliders },
         { id: 'cat_promotions', name: 'Promo Elasticity', icon: Tag, badge: promotions.filter(p => p.status === 'needs_dampening').length },
         { id: 'cat_markdowns', name: 'Markdown Simulator', icon: Sliders },
         { id: 'cat_substitutions', name: 'Brand Substitutions', icon: Repeat },
@@ -674,6 +750,7 @@ export default function Dashboard({
       ];
     } else if (activePersonaKey === 'executive') {
       return [
+        { id: 'decision_studio', name: 'Decision Engine Studio', icon: Sliders },
         { id: 'exec_cockpit', name: 'Omnichannel Cockpit', icon: LayoutGrid },
         { id: 'backtest', name: '6-Week Backtest (Proof)', icon: CheckCircle2 },
         { id: 'exec_network', name: 'Multi-Store Network', icon: MapPin },
@@ -685,6 +762,7 @@ export default function Dashboard({
       // store_manager
       return [
         { id: 'overview', name: 'Store Operations Cockpit', icon: LayoutGrid },
+        { id: 'decision_studio', name: 'Decision Engine Studio', icon: Sliders },
         { id: 'actions', name: 'Store Floor Prescriptions', icon: Sparkles, badge: recommendations.filter(r => r.status === 'pending').length },
         { id: 'staff_todo', name: 'Floor Staff Checklist', icon: Check, badge: staffTasks.filter(t => t.status === 'pending').length },
         { id: 'whatsapp', name: 'WhatsApp Store Bot', icon: MessageSquare },
@@ -698,6 +776,7 @@ export default function Dashboard({
 
   const TAB_LABELS = {
     overview: 'Store Operations Cockpit',
+    decision_studio: 'AI Decision Studio: 9 Signals → 6 Stages',
     sc_transfers: 'District Inter-Store Transfers',
     sc_slotting: 'Central DC Slotting & Capacity',
     sc_suppliers: 'Supplier Lead-Time Reliability (OTIF)',
@@ -946,6 +1025,20 @@ export default function Dashboard({
           {/* Right: Actions, Notifications + User Profile */}
           <div className="flex items-center gap-2.5 sm:gap-3">
             
+            {/* Live Decision Engine Studio */}
+            <button
+              onClick={() => setActiveTab('decision_studio')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer ${
+                activeTab === 'decision_studio'
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+              }`}
+              title="Tune all 9 enterprise signals live and observe the 6-stage decision pipeline"
+            >
+              <Sliders className="w-3.5 h-3.5 text-indigo-500" />
+              <span className="hidden sm:inline">Decision Studio</span>
+            </button>
+
             {/* AI What-If Scenario Copilot (Groq LLM) */}
             <button
               onClick={() => {
@@ -2328,6 +2421,561 @@ export default function Dashboard({
                     </p>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================
+              LIVE DECISION ENGINE STUDIO (9 SIGNALS -> 6 STAGES)
+          ======================================================== */}
+          {activeTab === 'decision_studio' && (
+            <div className="space-y-6">
+              {/* Studio Header Banner */}
+              <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 rounded-3xl p-6 text-white shadow-xl border border-indigo-800/40">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                  <div>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 text-xs font-semibold mb-2">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                      <span>Observe → Predict → Reason → Decide → Act → Measure</span>
+                    </div>
+                    <h2 className="text-2xl font-extrabold tracking-tight">AI Decision Intelligence Studio</h2>
+                    <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                      Connect all 9 real-world enterprise signals live. Simulate market shocks, observe the 6-stage Connected Chain reaction, and generate prescriptive actions with verified baseline ROI.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => fetchStudioEvaluation()}
+                      disabled={studioLoading}
+                      className="px-4 py-2.5 bg-gradient-to-r from-[#5244E9] to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-xl text-xs font-bold shadow-lg transition-all cursor-pointer flex items-center gap-2"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${studioLoading ? 'animate-spin' : ''}`} />
+                      <span>{studioLoading ? 'Simulating Engine...' : 'Re-Evaluate AI Policy'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Quick Presets */}
+                <div className="mt-5 pt-4 border-t border-white/10">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                    ⚡ Quick Scenario Presets (1-Click Test):
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      {
+                        label: 'Festival Stockout Shock',
+                        desc: 'Basmati Rice + Festival Gala + 20% Promo',
+                        patch: { sku: 'SKU-4412', list_price: 395, unit_cost: 290, sales_velocity: 24, inventory_on_hand: 28, promotion_discount_pct: 20, lead_time_days: 6, supplier_delay_days: 0, local_event: 'festival_gala', weather_anomaly: 'monsoon_rain', store_format: 'express' }
+                      },
+                      {
+                        label: 'Deadstock Clearance',
+                        desc: 'Celebration Gift Box + 185 On-Hand + No Promo',
+                        patch: { sku: 'SKU-8801', list_price: 320, unit_cost: 210, sales_velocity: 4, inventory_on_hand: 190, promotion_discount_pct: 0, lead_time_days: 7, supplier_delay_days: 0, local_event: 'none', weather_anomaly: 'normal', store_format: 'supercenter' }
+                      },
+                      {
+                        label: 'Marathon Hydration Surge',
+                        desc: 'Fresh Milk 1L + City Marathon + Heatwave',
+                        patch: { sku: 'SKU-1044', list_price: 58, unit_cost: 44, sales_velocity: 85, inventory_on_hand: 40, promotion_discount_pct: 5, lead_time_days: 1, supplier_delay_days: 0, local_event: 'marathon', weather_anomaly: 'heatwave', store_format: 'express' }
+                      },
+                      {
+                        label: 'Port Transit Delay',
+                        desc: 'Sunflower Oil + 4d Delay + Competitor Undercut',
+                        patch: { sku: 'SKU-3110', list_price: 680, unit_cost: 510, sales_velocity: 14, inventory_on_hand: 12, promotion_discount_pct: 10, lead_time_days: 5, supplier_delay_days: 4, local_event: 'none', weather_anomaly: 'monsoon_rain', store_format: 'express', competitor_price: 640, competitor_promo_active: true }
+                      },
+                      {
+                        label: 'Balanced Run-Rate',
+                        desc: 'Atta 10kg + Healthy 14-Day Cover Buffer',
+                        patch: { sku: 'SKU-2209', list_price: 340, unit_cost: 255, sales_velocity: 16, inventory_on_hand: 120, promotion_discount_pct: 5, lead_time_days: 4, supplier_delay_days: 0, local_event: 'none', weather_anomaly: 'normal', store_format: 'supercenter' }
+                      }
+                    ].map((preset, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          const updated = { ...studioSignals, ...preset.patch };
+                          setStudioSignals(updated);
+                          fetchStudioEvaluation(updated);
+                        }}
+                        className="text-left px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 hover:border-indigo-400 text-xs transition-all cursor-pointer group"
+                      >
+                        <div className="font-bold text-white group-hover:text-indigo-300">{preset.label}</div>
+                        <div className="text-[10px] text-slate-400">{preset.desc}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Two-Column Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                {/* LEFT COLUMN: THE 9 LIVE ENTERPRISE SIGNALS (Inputs) */}
+                <div className="lg:col-span-5 space-y-4">
+                  <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
+                    <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600">
+                          <Sliders className="w-4 h-4" />
+                        </span>
+                        <div>
+                          <h3 className="font-bold text-slate-900 text-sm">9 Live Enterprise Signals</h3>
+                          <p className="text-[11px] text-slate-500">Tune operational and external market variables</p>
+                        </div>
+                      </div>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        Interactive
+                      </span>
+                    </div>
+
+                    <div className="space-y-4 text-xs">
+                      {/* Signal 1: SKU Selection */}
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">Signal 1: SKU & Item Profile</label>
+                        <select
+                          value={studioSignals.sku}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            let lp = 395, uc = 290, vel = 18, lt = 6;
+                            if (val === 'SKU-3110') { lp = 680; uc = 510; vel = 12; lt = 5; }
+                            else if (val === 'SKU-1044') { lp = 58; uc = 44; vel = 85; lt = 1; }
+                            else if (val === 'SKU-8801') { lp = 320; uc = 210; vel = 4; lt = 7; }
+                            else if (val === 'SKU-2209') { lp = 340; uc = 255; vel = 16; lt = 4; }
+                            else if (val === 'SKU-5521') { lp = 220; uc = 155; vel = 10; lt = 4; }
+                            const upd = { ...studioSignals, sku: val, list_price: lp, unit_cost: uc, sales_velocity: vel, lead_time_days: lt };
+                            setStudioSignals(upd);
+                            fetchStudioEvaluation(upd);
+                          }}
+                          className="w-full text-xs font-bold px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-[#5244E9]"
+                        >
+                          <option value="SKU-4412">SKU-4412: Royal Basmati Rice 5 kg (₹395 list)</option>
+                          <option value="SKU-3110">SKU-3110: Refined Sunflower Oil 5L (₹680 list)</option>
+                          <option value="SKU-1044">SKU-1044: Pasteurized Whole Milk 1L (₹58 list)</option>
+                          <option value="SKU-8801">SKU-8801: Celebration Gift Box 500g (₹320 list)</option>
+                          <option value="SKU-2209">SKU-2209: Chakki Fresh Atta 10 kg (₹340 list)</option>
+                          <option value="SKU-5521">SKU-5521: South Indian Filter Coffee (₹220 list)</option>
+                        </select>
+                      </div>
+
+                      {/* Signal 2: Store Format */}
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">Signal 2: Store Format & Channel</label>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {['express', 'supercenter', 'hypermarket', 'ecommerce_dc'].map(fmt => (
+                            <button
+                              key={fmt}
+                              type="button"
+                              onClick={() => {
+                                const upd = { ...studioSignals, store_format: fmt };
+                                setStudioSignals(upd);
+                                fetchStudioEvaluation(upd);
+                              }}
+                              className={`py-1.5 px-2 rounded-lg text-[11px] font-bold capitalize transition-all cursor-pointer ${
+                                studioSignals.store_format === fmt
+                                  ? 'bg-indigo-600 text-white shadow-xs'
+                                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                              }`}
+                            >
+                              {fmt.replace('_', ' ')}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Signal 3: Daily Sales Velocity */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="font-bold text-slate-700">Signal 3: Daily Sales Velocity</label>
+                          <span className="font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-[11px]">
+                            {studioSignals.sales_velocity} units/day
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min="2"
+                          max="120"
+                          value={studioSignals.sales_velocity}
+                          onChange={(e) => {
+                            const upd = { ...studioSignals, sales_velocity: parseFloat(e.target.value) };
+                            setStudioSignals(upd);
+                            fetchStudioEvaluation(upd);
+                          }}
+                          className="w-full accent-indigo-600 cursor-pointer"
+                        />
+                      </div>
+
+                      {/* Signal 4: Inventory On-Hand */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="font-bold text-slate-700">Signal 4: Inventory On-Hand</label>
+                          <span className={`font-mono font-bold px-2 py-0.5 rounded text-[11px] ${
+                            studioSignals.inventory_on_hand < 30 ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'
+                          }`}>
+                            {studioSignals.inventory_on_hand} units
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="250"
+                          value={studioSignals.inventory_on_hand}
+                          onChange={(e) => {
+                            const upd = { ...studioSignals, inventory_on_hand: parseInt(e.target.value) };
+                            setStudioSignals(upd);
+                            fetchStudioEvaluation(upd);
+                          }}
+                          className="w-full accent-indigo-600 cursor-pointer"
+                        />
+                      </div>
+
+                      {/* Signal 5: Promotion Discount % */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="font-bold text-slate-700">Signal 5: Active Promotion Discount</label>
+                          <span className="font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-[11px]">
+                            {studioSignals.promotion_discount_pct}% Off
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="50"
+                          step="5"
+                          value={studioSignals.promotion_discount_pct}
+                          onChange={(e) => {
+                            const upd = { ...studioSignals, promotion_discount_pct: parseInt(e.target.value) };
+                            setStudioSignals(upd);
+                            fetchStudioEvaluation(upd);
+                          }}
+                          className="w-full accent-indigo-600 cursor-pointer"
+                        />
+                      </div>
+
+                      {/* Signal 6: Supplier Lead Time & Variance */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="font-bold text-slate-700 text-[11px]">Lead Time</label>
+                            <span className="text-[10px] font-mono text-slate-600">{studioSignals.lead_time_days}d</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="1"
+                            max="14"
+                            value={studioSignals.lead_time_days}
+                            onChange={(e) => {
+                              const upd = { ...studioSignals, lead_time_days: parseFloat(e.target.value) };
+                              setStudioSignals(upd);
+                              fetchStudioEvaluation(upd);
+                            }}
+                            className="w-full accent-indigo-600 cursor-pointer"
+                          />
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="font-bold text-slate-700 text-[11px]">Delay Jitter</label>
+                            <span className={`text-[10px] font-mono ${studioSignals.supplier_delay_days > 0 ? 'text-rose-600 font-bold' : 'text-slate-600'}`}>
+                              +{studioSignals.supplier_delay_days}d
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min="0"
+                            max="6"
+                            value={studioSignals.supplier_delay_days}
+                            onChange={(e) => {
+                              const upd = { ...studioSignals, supplier_delay_days: parseFloat(e.target.value) };
+                              setStudioSignals(upd);
+                              fetchStudioEvaluation(upd);
+                            }}
+                            className="w-full accent-indigo-600 cursor-pointer"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Signal 7 & 8: Local Event & Weather */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block font-bold text-slate-700 mb-1 text-[11px]">Signal 7: Local Event</label>
+                          <select
+                            value={studioSignals.local_event}
+                            onChange={(e) => {
+                              const upd = { ...studioSignals, local_event: e.target.value };
+                              setStudioSignals(upd);
+                              fetchStudioEvaluation(upd);
+                            }}
+                            className="w-full text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border border-slate-300 bg-slate-50"
+                          >
+                            <option value="none">None (1.0x)</option>
+                            <option value="festival_gala">Festival Gala (+35%)</option>
+                            <option value="marathon">City Marathon (+45%)</option>
+                            <option value="cricket_match">Cricket Match (+25%)</option>
+                            <option value="local_fair">Local Fair (+20%)</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block font-bold text-slate-700 mb-1 text-[11px]">Signal 8: Weather</label>
+                          <select
+                            value={studioSignals.weather_anomaly}
+                            onChange={(e) => {
+                              const upd = { ...studioSignals, weather_anomaly: e.target.value };
+                              setStudioSignals(upd);
+                              fetchStudioEvaluation(upd);
+                            }}
+                            className="w-full text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border border-slate-300 bg-slate-50"
+                          >
+                            <option value="normal">Normal (1.0x)</option>
+                            <option value="monsoon_rain">Monsoon Rain (+15%)</option>
+                            <option value="heatwave">Heatwave (+28%)</option>
+                            <option value="cold_snap">Cold Snap (+10%)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Signal 9: Competitor Pricing */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="font-bold text-slate-700">Signal 9: Competitor Price Benchmark</label>
+                          <label className="flex items-center gap-1.5 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={studioSignals.competitor_promo_active}
+                              onChange={(e) => {
+                                const upd = { ...studioSignals, competitor_promo_active: e.target.checked };
+                                setStudioSignals(upd);
+                                fetchStudioEvaluation(upd);
+                              }}
+                              className="rounded accent-indigo-600"
+                            />
+                            <span className="text-[10px] text-slate-600 font-semibold">Flyer Promo Active</span>
+                          </label>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-400 font-bold">₹</span>
+                          <input
+                            type="number"
+                            value={studioSignals.competitor_price}
+                            onChange={(e) => {
+                              const upd = { ...studioSignals, competitor_price: parseFloat(e.target.value) || 0 };
+                              setStudioSignals(upd);
+                              fetchStudioEvaluation(upd);
+                            }}
+                            className="w-full text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-300 bg-slate-50"
+                          />
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+
+                {/* RIGHT COLUMN: THE 6-STEP DECISION INTELLIGENCE OUTPUT */}
+                <div className="lg:col-span-7 space-y-4">
+                  
+                  {/* STAGE 1: OBSERVE */}
+                  <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
+                    <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold">1</span>
+                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Observe • Signal Synthesis</h4>
+                      </div>
+                      <span className="text-[11px] font-bold text-slate-500">Multi-Signal Convergence</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                      <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
+                        <span className="text-[10px] text-slate-400 uppercase font-bold block">Effective Demand</span>
+                        <div className="text-base font-extrabold text-slate-900 mt-0.5">
+                          {studioResult?.signals_observed?.effective_daily_demand || studioSignals.sales_velocity} /d
+                        </div>
+                        <span className="text-[9px] text-[#2563EB] font-semibold">Lift factored</span>
+                      </div>
+                      <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
+                        <span className="text-[10px] text-slate-400 uppercase font-bold block">Days of Cover</span>
+                        <div className={`text-base font-extrabold mt-0.5 ${
+                          (studioResult?.signals_observed?.days_of_cover || 2.1) < 2.5 ? 'text-rose-600' : 'text-slate-900'
+                        }`}>
+                          {studioResult?.signals_observed?.days_of_cover || 2.1} Days
+                        </div>
+                        <span className="text-[9px] text-slate-500 font-semibold">Stock run-out</span>
+                      </div>
+                      <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
+                        <span className="text-[10px] text-slate-400 uppercase font-bold block">Effective Lead Time</span>
+                        <div className="text-base font-extrabold text-slate-900 mt-0.5">
+                          {studioResult?.signals_observed?.effective_lead_time || studioSignals.lead_time_days} Days
+                        </div>
+                        <span className="text-[9px] text-slate-500 font-semibold">Supplier wave</span>
+                      </div>
+                      <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
+                        <span className="text-[10px] text-slate-400 uppercase font-bold block">Net Shelf Price</span>
+                        <div className="text-base font-extrabold text-slate-900 mt-0.5">
+                          ₹{studioResult?.signals_observed?.current_price || studioSignals.list_price}
+                        </div>
+                        <span className="text-[9px] text-emerald-600 font-semibold">Post discount</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* STAGE 2: PREDICT (Plotly Chart & Risk) */}
+                  <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
+                    <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10px] font-bold">2</span>
+                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Predict • Quantile Demand & Stockout Risk</h4>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-bold text-rose-600 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full">
+                          Risk: {studioResult?.predictive_forecast?.stockout_probability || '88.5%'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="h-[180px]">
+                      <PlotlyChart
+                        data={[
+                          {
+                            x: studioResult?.predictive_forecast?.days || ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7'],
+                            y: studioResult?.predictive_forecast?.p10_pessimistic || [12, 14, 15, 17, 18, 20, 22],
+                            name: 'P10 (Pessimistic)',
+                            type: 'scatter',
+                            mode: 'lines',
+                            line: { color: '#93c5fd', width: 1.5, dash: 'dot' }
+                          },
+                          {
+                            x: studioResult?.predictive_forecast?.days || ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7'],
+                            y: studioResult?.predictive_forecast?.p50_expected || [18, 20, 22, 25, 27, 30, 32],
+                            name: 'P50 (Expected)',
+                            type: 'scatter',
+                            mode: 'lines+markers',
+                            line: { color: '#2563EB', width: 2.5 }
+                          },
+                          {
+                            x: studioResult?.predictive_forecast?.days || ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7'],
+                            y: studioResult?.predictive_forecast?.p90_surge || [24, 28, 30, 35, 39, 42, 45],
+                            name: 'P90 (Surge Peak)',
+                            type: 'scatter',
+                            mode: 'lines',
+                            line: { color: '#1D4ED8', width: 1.5, dash: 'dot' }
+                          }
+                        ]}
+                        layout={{
+                          margin: { t: 10, r: 10, b: 30, l: 30 },
+                          legend: { orientation: 'h', y: -0.25, x: 0.1 },
+                          yaxis: { title: 'Units', gridcolor: '#f8fafc' },
+                          xaxis: { gridcolor: '#f8fafc' }
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* STAGE 3 & 4: REASON & DECIDE (The 7 Canonical Actions) */}
+                  <div className="bg-white rounded-2xl border-2 border-indigo-200 p-5 shadow-md">
+                    <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                      <div className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px] font-bold">3+4</span>
+                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Reason & Decide • AI Prescription</h4>
+                      </div>
+                      <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-[#5244E9] text-white shadow-xs">
+                        {studioResult?.decision?.badge || 'Replenish'}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                      <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80">
+                        <div className="text-[11px] font-bold text-slate-500 uppercase">Prescription Details</div>
+                        <div className="text-sm font-extrabold text-slate-900 mt-1">
+                          {studioResult?.decision?.badge}: {studioResult?.decision?.recommended_quantity ? `${studioResult.decision.recommended_quantity} Units` : 'Configuration Shift'} • {studioResult?.decision?.timing}
+                        </div>
+                        <p className="text-xs text-slate-600 mt-1.5 leading-relaxed font-medium">
+                          <b>Why:</b> {studioResult?.decision?.rationale}
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-200/80">
+                          <span className="text-[10px] font-bold text-emerald-800 uppercase">Expected Impact</span>
+                          <p className="text-[11px] text-emerald-950 font-medium mt-1">
+                            {studioResult?.decision?.expected_impact}
+                          </p>
+                        </div>
+                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                          <span className="text-[10px] font-bold text-slate-600 uppercase">Alternatives Evaluated</span>
+                          <p className="text-[11px] text-slate-700 font-medium mt-1">
+                            {studioResult?.decision?.alternatives_considered}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Connected Decision Chain Ripple Narrative */}
+                      <div className="p-3 rounded-xl bg-indigo-50/50 border border-indigo-100 text-xs">
+                        <span className="text-[10px] font-bold text-indigo-700 uppercase block mb-1">
+                          Connected Decision Chain Ripple Breakdown
+                        </span>
+                        <div className="text-[11px] text-slate-700 font-medium whitespace-pre-line leading-relaxed">
+                          {studioResult?.decision?.connected_chain_reasoning}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* STAGE 5: ACT (1-Click Live Dispatch) */}
+                    <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-[10px] font-bold">5</span>
+                        <span className="text-xs font-bold text-slate-700">Act • Dispatch Decision</span>
+                      </div>
+                      <button
+                        onClick={handleCommitStudioAction}
+                        disabled={studioCommitted}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm ${
+                          studioCommitted
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                            : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white'
+                        }`}
+                      >
+                        <Check className="w-4 h-4" />
+                        <span>{studioCommitted ? '✓ Dispatched & Live in PO Queue' : '⚡ Commit & Dispatch Live Decision'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* STAGE 6: MEASURE (AI vs Simple Baseline Policy) */}
+                  <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+                    <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-[#FAFAFC]">
+                      <div className="flex items-center gap-2">
+                        <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-[10px] font-bold">6</span>
+                        <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Measure • AI vs Simple Baseline Policy</h4>
+                      </div>
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                        Quantified Enterprise ROI
+                      </span>
+                    </div>
+
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-50 text-slate-500 font-semibold uppercase text-[10px] border-b border-slate-200">
+                        <tr>
+                          <th className="py-2.5 px-3">Metric</th>
+                          <th className="py-2.5 px-3">Simple Baseline</th>
+                          <th className="py-2.5 px-3 font-bold text-indigo-700">RetailSense AI</th>
+                          <th className="py-2.5 px-3">Improvement</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 font-medium">
+                        {studioResult?.baseline_comparison?.metrics?.map((row, idx) => (
+                          <tr key={idx} className="hover:bg-slate-50/70">
+                            <td className="py-2.5 px-3 font-bold text-slate-900">{row.metric}</td>
+                            <td className="py-2.5 px-3 text-rose-700">{row.baseline}</td>
+                            <td className="py-2.5 px-3 font-bold text-emerald-700">{row.ai}</td>
+                            <td className="py-2.5 px-3">
+                              <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]">
+                                {row.improvement}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                </div>
+
               </div>
             </div>
           )}

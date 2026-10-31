@@ -287,4 +287,44 @@ async def simulate_what_if_scenario(req: WhatIfRequest):
     from app.services.llm_reasoning_service import llm_service
     return llm_service.simulate_what_if_scenario(req.scenario)
 
+# -------------------------------------------------------------
+# Live Decision Intelligence Studio (9 Signals -> 6 Stages)
+# -------------------------------------------------------------
+class StudioEvaluationRequest(BaseModel):
+    sku: Optional[str] = "SKU-4412"
+    store_name: Optional[str] = "Store #101 Metro Central"
+    store_format: Optional[str] = "express"
+    sales_velocity: Optional[float] = 18.0
+    inventory_on_hand: Optional[int] = 38
+    promotion_discount_pct: Optional[int] = 20
+    list_price: Optional[float] = 395.0
+    unit_cost: Optional[float] = 290.0
+    lead_time_days: Optional[float] = 6.0
+    supplier_delay_days: Optional[float] = 0.0
+    local_event: Optional[str] = "none"
+    weather_anomaly: Optional[str] = "normal"
+    competitor_price: Optional[float] = 385.0
+    competitor_promo_active: Optional[bool] = False
+
+@router.post("/decisions/evaluate-studio")
+async def evaluate_studio_scenario(req: StudioEvaluationRequest):
+    """Executes Observe -> Predict -> Reason -> Decide -> Act -> Measure with user inputs."""
+    return retail_service.evaluate_multi_signal_decision(req.dict())
+
+class CommitStudioActionRequest(BaseModel):
+    sku: str
+    badge: str
+    action_type: str
+    quantity: int
+    timing: str
+    rationale: str
+    expected_impact: str
+    protected_value: Optional[float] = 25000.0
+
+@router.post("/decisions/commit-studio-action")
+async def commit_studio_action(req: CommitStudioActionRequest):
+    """Commits user-configured studio decision to active queue."""
+    return retail_service.commit_studio_action(req.dict())
+
+
 
