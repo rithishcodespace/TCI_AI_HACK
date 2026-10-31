@@ -803,6 +803,72 @@ export default function Dashboard({
         ======================================================== */}
         <main className="flex-1 p-4 sm:p-8 space-y-6 max-w-[1440px] w-full mx-auto">
           
+          {/* ROLE-SPECIFIC COMMAND & DIRECTIVE BANNER (RBAC) */}
+          <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-blue-950 rounded-2xl p-4 sm:p-5 text-white shadow-lg border border-indigo-800/40 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center text-xl shrink-0 border border-white/15">
+                {activePersona.icon}
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-indigo-300 uppercase tracking-wider">
+                    Active Authority • {activePersona.roleLabel}
+                  </span>
+                  <span className="text-[10px] bg-indigo-500/30 text-indigo-200 px-2 py-0.5 rounded-full border border-indigo-400/30 font-medium">
+                    {activePersona.scope}
+                  </span>
+                </div>
+                <h2 className="text-sm sm:text-base font-bold text-white mt-1 leading-snug">
+                  {activePersonaKey === 'supply_chain' && "Inter-Store Balance & Central DC Replenishment Waves"}
+                  {activePersonaKey === 'category_lead' && "Promo Elasticity Dampening & Spoilage Recovery Governance"}
+                  {activePersonaKey === 'executive' && "Autonomous Retail Decision Intelligence • Enterprise ROI Proof"}
+                  {activePersonaKey === 'store_manager' && "Store #101 Daily Prescriptions & Shelf Stockout Prevention"}
+                </h2>
+                <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                  {activePersonaKey === 'supply_chain' && "Primary Directive: Authorize cross-dock transfer of 60 Atta units to Store #103 before the 04:00 PM transit wave to balance district stock without new PO cost."}
+                  {activePersonaKey === 'category_lead' && "Primary Directive: Dampen Sunflower Oil promo discount to 10% to protect ₹16,800 margin while upstream supplier transit delays clear."}
+                  {activePersonaKey === 'executive' && "Primary Directive: Replaying 6-week holdout shows 4.8x ROI multiple, ₹4,12,000 annualized savings per store, and +5.2% gross margin expansion."}
+                  {activePersonaKey === 'store_manager' && "Primary Directive: Order 120 units of Basmati Rice by Tuesday to avoid ₹38,000 lost sales during the weekend festival footfall surge."}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0 self-stretch md:self-auto justify-end">
+              {activePersonaKey === 'store_manager' && (
+                <button
+                  onClick={() => setActiveTab('staff_todo')}
+                  className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold backdrop-blur-xs border border-white/20 transition-all cursor-pointer whitespace-nowrap"
+                >
+                  View Staff Checklist →
+                </button>
+              )}
+              {activePersonaKey === 'supply_chain' && (
+                <button
+                  onClick={() => setActiveTab('actions')}
+                  className="px-3 py-2 rounded-xl bg-[#2563EB] hover:bg-blue-600 text-white text-xs font-semibold shadow-md transition-all cursor-pointer whitespace-nowrap"
+                >
+                  Review Network Transfers →
+                </button>
+              )}
+              {activePersonaKey === 'category_lead' && (
+                <button
+                  onClick={() => setActiveTab('actions')}
+                  className="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold shadow-md transition-all cursor-pointer whitespace-nowrap"
+                >
+                  Review Promo Dampening →
+                </button>
+              )}
+              {activePersonaKey === 'executive' && (
+                <button
+                  onClick={() => setActiveTab('backtest')}
+                  className="px-3 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 text-xs font-bold shadow-md transition-all cursor-pointer whitespace-nowrap"
+                >
+                  Audit 4.8x ROI Backtest →
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* TAB 1: OVERVIEW (Full KPI + Demand Fulfillment + Actions) */}
           {activeTab === 'overview' && (
             <div className="space-y-6">

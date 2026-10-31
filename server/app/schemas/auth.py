@@ -4,7 +4,7 @@ from pydantic import BaseModel
 class LoginRequest(BaseModel):
     email: str
     password: str
-    role: Optional[str] = "store_manager"
+    role: Optional[str] = None
 
 class SignupRequest(BaseModel):
     fullName: str

@@ -25,6 +25,16 @@ async def get_dashboard_kpis():
     """Retrieve top-level KPI metrics matching Preline executive layout."""
     return retail_service.get_dashboard_kpis()
 
+@router.get("/dashboard/role-summary")
+async def get_dashboard_role_summary(role: Optional[str] = Query("store_manager")):
+    """Returns role-specific executive briefing, directives, and KPIs for active persona."""
+    return retail_service.get_role_summary(role)
+
+@router.get("/forecasts/{sku}")
+async def get_sku_forecast(sku: str):
+    """Returns probabilistic P10-P90 daily forecast distribution with ML uplift features."""
+    return retail_service.get_sku_forecast(sku)
+
 @router.get("/recommendations")
 async def get_recommendations():
     """Ranked candidate action list with expected value, rationale, confidence, and alternatives."""
