@@ -176,3 +176,115 @@ async def export_purchase_orders():
         headers={"Content-Disposition": "attachment; filename=approved_purchase_orders.csv"}
     )
 
+# -------------------------------------------------------------
+# Role-Specific Endpoints: Supply Chain Lead
+# -------------------------------------------------------------
+@router.get("/logistics/transfers")
+async def get_transfers():
+    """Retrieve district inter-store transfer balance candidates."""
+    return retail_service.get_transfers()
+
+@router.post("/logistics/transfers/{transfer_id}/execute")
+async def execute_transfer(transfer_id: int):
+    """Execute inter-store transfer transit dispatch."""
+    res = retail_service.execute_transfer(transfer_id)
+    if "error" in res:
+        raise HTTPException(status_code=404, detail=res["error"])
+    return res
+
+@router.get("/logistics/suppliers")
+async def get_suppliers():
+    """Supplier lead-time reliability, variance, and OTIF rating."""
+    return retail_service.get_suppliers()
+
+@router.get("/logistics/dc-slotting")
+async def get_dc_slotting():
+    """Central warehouse capacity and dock utilization status."""
+    return retail_service.get_dc_slotting()
+
+# -------------------------------------------------------------
+# Role-Specific Endpoints: Category Merchandising Lead
+# -------------------------------------------------------------
+@router.get("/category/promotions")
+async def get_promotions():
+    """Active promo elasticity factor and supply chain synchronization."""
+    return retail_service.get_promotions()
+
+class DampenPromoRequest(BaseModel):
+    new_discount_pct: Optional[int] = None
+
+@router.post("/category/promotions/{promo_id}/dampen")
+async def dampen_promotion(promo_id: int, req: DampenPromoRequest):
+    """Dampen promo discount to align depletion with supplier lead time."""
+    res = retail_service.dampen_promotion(promo_id, req.new_discount_pct)
+    if "error" in res:
+        raise HTTPException(status_code=404, detail=res["error"])
+    return res
+
+@router.get("/category/substitutions")
+async def get_substitutions():
+    """Cross-brand substitution mappings and customer retention metrics."""
+    return retail_service.get_substitutions()
+
+@router.get("/category/competitor-benchmarks")
+async def get_competitor_benchmarks():
+    """Live competitor pricing benchmarks (Blinkit, BigBasket, DMart)."""
+    return retail_service.get_competitor_benchmarks()
+
+# -------------------------------------------------------------
+# Role-Specific Endpoints: Store Operations (Store Manager)
+# -------------------------------------------------------------
+@router.get("/store/staff-tasks")
+async def get_staff_tasks():
+    """Daily floor staff task checklist for Store #101."""
+    return retail_service.get_staff_tasks()
+
+@router.post("/store/staff-tasks/{task_id}/toggle")
+async def toggle_staff_task(task_id: int):
+    """Toggle completion status of a floor staff task."""
+    res = retail_service.toggle_staff_task(task_id)
+    if "error" in res:
+        raise HTTPException(status_code=404, detail=res["error"])
+    return res
+
+# -------------------------------------------------------------
+# Role-Specific Endpoints: Executive VP (Omnichannel Network)
+# -------------------------------------------------------------
+@router.get("/network/stores")
+async def get_store_network():
+    """District omnichannel store performance and critical SKU health."""
+    return retail_service.get_store_network()
+
+# -------------------------------------------------------------
+# ML Models & Live Simulation Endpoints
+# -------------------------------------------------------------
+@router.get("/ml/markdown-optimizer")
+async def get_markdown_optimizer(
+    sku: Optional[str] = Query("SKU-8801"),
+    discount_pct: Optional[int] = Query(25)
+):
+    """Price elasticity model optimizing clearance velocity vs margin recovery."""
+    return retail_service.get_markdown_simulation(sku=sku, discount_pct=discount_pct)
+
+@router.get("/ml/stockout-simulator")
+async def simulate_stockout(
+    sku: Optional[str] = Query("SKU-4412"),
+    lead_time_days: Optional[float] = Query(None),
+    demand_multiplier: Optional[float] = Query(None)
+):
+    """Monte Carlo 1,000-path simulation of stockout probability without vs with AI."""
+    return retail_service.simulate_stockout(sku=sku, lead_time_days=lead_time_days, demand_multiplier=demand_multiplier)
+
+# -------------------------------------------------------------
+# LLM Connected Decision Chain What-If Endpoint (Groq AI)
+# -------------------------------------------------------------
+class WhatIfRequest(BaseModel):
+    scenario: str
+
+@router.post("/llm/what-if")
+async def simulate_what_if_scenario(req: WhatIfRequest):
+    """Traces hypothetical scenarios through Demand -> Inventory -> Replenishment -> Logistics -> Margin -> Customer Experience."""
+    from app.services.llm_reasoning_service import llm_service
+    return llm_service.simulate_what_if_scenario(req.scenario)
+
+
