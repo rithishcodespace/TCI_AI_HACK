@@ -932,10 +932,13 @@ export default function Dashboard({
                         const isPending = rec.status === 'pending';
                         const isApproved = rec.status === 'approved';
 
-                        let badgeClass = "bg-[#EEF4FF] text-[#2563EB]";
+                        let badgeClass = "bg-[#EEF4FF] text-[#2563EB] border border-blue-200";
+                        if (rec.action_type === 'transfer') badgeClass = "bg-teal-50 text-teal-800 border border-teal-200";
+                        if (rec.action_type === 'increase_allocation') badgeClass = "bg-indigo-50 text-indigo-800 border border-indigo-200";
                         if (rec.action_type === 'markdown') badgeClass = "bg-amber-50 text-amber-800 border border-amber-200";
+                        if (rec.action_type === 'adjust_promotion') badgeClass = "bg-orange-50 text-orange-800 border border-orange-200";
                         if (rec.action_type === 'substitute') badgeClass = "bg-purple-50 text-purple-800 border border-purple-200";
-                        if (rec.action_type === 'no_action') badgeClass = "bg-slate-100 text-slate-700";
+                        if (rec.action_type === 'no_action') badgeClass = "bg-slate-100 text-slate-700 border border-slate-200";
 
                         return (
                           <tr key={rec.rec_id} className="hover:bg-slate-50/70 transition-colors">
@@ -1051,13 +1054,18 @@ export default function Dashboard({
                         </div>
                       </div>
 
-                      <div className="mt-4 p-3 rounded-xl bg-[#FAFAFC] text-xs text-slate-700 leading-relaxed">
-                        <span className="font-semibold text-slate-900">Why: </span>
+                      <div className="mt-3.5 p-3 rounded-xl bg-emerald-50/70 border border-emerald-100 text-xs text-emerald-950 leading-relaxed">
+                        <span className="font-bold text-emerald-900">Expected Impact: </span>
+                        {rec.expected_impact}
+                      </div>
+
+                      <div className="mt-3 p-3 rounded-xl bg-[#FAFAFC] text-xs text-slate-700 leading-relaxed border border-slate-100">
+                        <span className="font-semibold text-slate-900">Why (Decision Rationale): </span>
                         {rec.rationale}
                       </div>
 
                       <div className="mt-3 text-[11px] text-slate-500">
-                        <span className="font-semibold text-slate-700">Alternatives: </span>
+                        <span className="font-semibold text-slate-700">Alternatives Considered: </span>
                         {rec.alternatives_considered}
                       </div>
                     </div>
