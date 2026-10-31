@@ -309,6 +309,9 @@ export default function AuthPage({
                   </span>
                   <input
                     type="text"
+                    id="fullName"
+                    name="fullName"
+                    autoComplete="name"
                     required
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
@@ -330,6 +333,9 @@ export default function AuthPage({
                 </span>
                 <input
                   type="email"
+                  id="email"
+                  name="email"
+                  autoComplete="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -350,6 +356,9 @@ export default function AuthPage({
                 </span>
                 <input
                   type={showPassword ? 'text' : 'password'}
+                  id="password"
+                  name="password"
+                  autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

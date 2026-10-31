@@ -1,63 +1,100 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
+  LayoutGrid, 
   Sparkles, 
   BarChart3, 
   Bell, 
   ChevronDown, 
   Menu, 
   X, 
-  LogOut, 
-  Settings, 
-  User, 
-  Activity,
-  Layers,
-  CheckCircle2,
+  CreditCard,
+  LogOut,
+  Settings,
+  User,
+  ArrowLeft,
+  Store,
   AlertTriangle,
-  RefreshCw,
-  Search,
-  ExternalLink,
-  Zap,
   TrendingUp,
-  Boxes,
-  Truck,
-  DollarSign,
-  ArrowRight,
-  ShieldCheck,
   Percent,
-  Clock,
-  Filter
+  Calendar,
+  Plus,
+  RefreshCw,
+  Download,
+  Check,
+  Send,
+  CheckCircle2,
+  Package,
+  Layers,
+  ShieldAlert,
+  MessageSquare,
+  Info,
+  Zap
 } from 'lucide-react';
+import PlotlyChart from './PlotlyChart';
 
 export default function Dashboard({ 
-  currentUser = { name: 'Rithish', email: 'rithish@retailcorp.com', role: 'store_manager' }, 
+  currentUser = { name: 'Alex Morgan', email: 'manager@retailchain.com', role: 'manager' }, 
   onBackToLanding 
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [activeTab, setActiveTab] = useState('prescriptions');
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'actions' | 'risk' | 'forecast' | 'backtest' | 'staff_todo' | 'whatsapp' | 'quality'
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
-  // Retail Decisions State
-  const [decisions, setDecisions] = useState([]);
-  const [baselineData, setBaselineData] = useState(null);
-  const [selectedActionFilter, setSelectedActionFilter] = useState('all');
-  const [selectedStoreFilter, setSelectedStoreFilter] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDecisionDetail, setSelectedDecisionDetail] = useState(null);
+  const [dateRange, setDateRange] = useState('25 Jul - 25 Aug');
+  const [demandChartType, setDemandChartType] = useState('orders'); // 'orders' | 'sales'
+  
+  // Data States
+  const [kpis, setKpis] = useState(null);
+  const [recommendations, setRecommendations] = useState([]);
+  const [riskBoard, setRiskBoard] = useState([]);
+  const [backtest, setBacktest] = useState(null);
+  const [dataIssues, setDataIssues] = useState([]);
+  const [isEngineRunning, setIsEngineRunning] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  const [executingId, setExecutingId] = useState(null);
+
+  // Modal States
+  const [selectedRecForModify, setSelectedRecForModify] = useState(null);
+  const [modifyQty, setModifyQty] = useState('');
+  const [modifyReason, setModifyReason] = useState('');
+
+  // WhatsApp Simulator Chat
+  const [chatInput, setChatInput] = useState('');
+  const [chatMessages, setChatMessages] = useState([
+    {
+      id: 1,
+      sender: 'bot',
+      text: "⚠️ *CRITICAL STOCKOUT ALERT*\n\n*Item:* Royal Basmati Rice 5 kg (SKU-4412)\n*Action:* Replenish 120 units by Tuesday\n*Why:* Stock covers 2.1 days, supplier takes 6 days, festival promo raises demand ~35%.\n*Expected Impact:* Avoids ₹38,000 lost sales; order cost ₹4,500.\n*Confidence:* High",
+      timestamp: "08:15 AM",
+      rec_id: 1,
+      has_actions: true
+    },
+    {
+      id: 2,
+      sender: 'user',
+      text: "Which items will run out this week?",
+      timestamp: "08:22 AM"
+    },
+    {
+      id: 3,
+      sender: 'bot',
+      text: "📋 *High Risk SKUs This Week:*\n\n1. *Royal Basmati Rice 5kg:* 2.1 days cover (Out by Thursday) - Loss risk: ₹38,000\n2. *Refined Sunflower Oil 5L:* 3.8 days cover (Out by Saturday) - Loss risk: ₹16,800\n\nTap *Approve* or reply with *Approve 1* to order Rice immediately.",
+      timestamp: "08:23 AM"
+    }
+  ]);
 
   const roleLabels = {
-    store_manager: 'Store Manager',
+    manager: 'Store Manager',
     supply_chain: 'Supply Chain Lead',
-    executive: 'Category Executive',
+    category_lead: 'Category Lead',
+    owner: 'Store Owner'
   };
 
-  const currentRoleLabel = roleLabels[currentUser.role] || currentUser.role || 'Retail Operations';
-  const initial = (currentUser.name || 'R').charAt(0).toUpperCase();
+  const currentRoleLabel = roleLabels[currentUser.role] || currentUser.role || 'Store Manager';
+  const initial = (currentUser.name || 'A').charAt(0).toUpperCase();
 
-  // Close mobile drawer on resize to desktop
+  // Close mobile drawer on resize
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
@@ -68,468 +105,272 @@ export default function Dashboard({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Close dropdowns on Escape key
+  // Fetch backend data
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        setIsMobileMenuOpen(false);
-        setIsProfileDropdownOpen(false);
-        setIsNotificationOpen(false);
-        setSelectedDecisionDetail(null);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    fetchKpis();
+    fetchRecommendations();
+    fetchRiskBoard();
+    fetchBacktest();
+    fetchDataIssues();
   }, []);
 
-  // Fetch Decisions & Baseline from Backend with Instant Local Fallback
-  useEffect(() => {
-    const fetchDecisionsData = async () => {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001/api/v1';
-      try {
-        const [resDecisions, resBaseline] = await Promise.all([
-          fetch(`${apiUrl}/decisions`),
-          fetch(`${apiUrl}/decisions/baseline-comparison`)
-        ]);
-
-        if (resDecisions.ok) {
-          const data = await resDecisions.json();
-          setDecisions(data);
-        }
-        if (resBaseline.ok) {
-          const baseline = await resBaseline.json();
-          setBaselineData(baseline);
-        }
-      } catch (err) {
-        console.warn('Backend note (using local demo dataset):', err);
-        // Fallback local rich data
-        setDecisions([
-          {
-            id: "DEC-8091",
-            sku_id: "SKU-9824",
-            sku_name: "Organic Silk Almond Milk 64oz",
-            category: "Chilled Dairy & Plant-Based",
-            store_id: "STR-104",
-            store_name: "Store #104 Downtown Hub",
-            channel: "Physical Retail (Express)",
-            recommended_action: "replenish",
-            urgency: "Critical Risk",
-            rationale: "Demand velocity spiked +34% due to local 10K marathon this weekend. Current inventory (28 units, 1.4 days of supply) will stock out in 36 hours. Supplier lead time is 5 days. Expediting 450 units from Regional DC-1 immediately guarantees 100% shelf availability.",
-            expected_impact: "Protects $3,850 in weekend revenue; prevents 180 projected customer stockout walkaways.",
-            signals: {
-              sales_velocity: "+34% surge (82 units/day)",
-              inventory_on_hand: 28,
-              days_of_supply: 1.4,
-              supplier_lead_time_days: 5,
-              active_promotion: "None",
-              unit_price: 4.89,
-              weather_condition: "Sunny & Warm (+12°F above avg)",
-              competitor_price: 4.99,
-              local_event: "Downtown Metro Marathon"
-            },
-            chain_impact: {
-              demand: "Surge +34% via weekend outdoor footfall",
-              inventory: "Depletes to 0 within 36h if no action",
-              replenishment: "Expedited truck delivery from DC-1 (ETA 14h)",
-              logistics: "Consolidated with Route #12 morning run",
-              margin: "Gross margin preserved at 38.2%",
-              customer_experience: "Zero shelf stockouts during peak event"
-            },
-            status: "pending",
-            confidence_score: 0.984
-          },
-          {
-            id: "DEC-8092",
-            sku_id: "SKU-4112",
-            sku_name: "Tide Pods Spring Meadow 42ct",
-            category: "Household Essentials",
-            store_id: "STR-208",
-            store_name: "Store #208 Westside Suburb",
-            channel: "Omnichannel Supercenter",
-            recommended_action: "transfer inventory",
-            urgency: "High",
-            rationale: "Store #208 has 420 surplus units (62 days of supply) while adjacent Northside Store #102 is experiencing stockout risk (12 units, 2 days supply). Intra-district cross-dock transfer of 180 units balances service levels without incurring new manufacturer purchase orders.",
-            expected_impact: "Averts stockout at Store #102; cuts $4,200 tied-up working capital in Westside storage.",
-            signals: {
-              sales_velocity: "-8% steady (6 units/day)",
-              inventory_on_hand: 420,
-              days_of_supply: 62.0,
-              supplier_lead_time_days: 7,
-              active_promotion: "None",
-              unit_price: 14.99,
-              weather_condition: "Normal",
-              competitor_price: 15.29,
-              local_event: null
-            },
-            chain_impact: {
-              demand: "Balanced across Northside & Westside zones",
-              inventory: "Reduces holding cost by 42% at Store #208",
-              replenishment: "Zero external PO required",
-              logistics: "Low-cost van transfer ($45 transit cost)",
-              margin: "Maintains full retail margin (no clearance needed)",
-              customer_experience: "Restores 99% in-stock rate across both stores"
-            },
-            status: "pending",
-            confidence_score: 0.965
-          },
-          {
-            id: "DEC-8093",
-            sku_id: "SKU-2041",
-            sku_name: "Chobani Greek Vanilla Yogurt 32oz",
-            category: "Chilled Dairy",
-            store_id: "STR-310",
-            store_name: "Store #310 Metro Plaza",
-            channel: "Physical Retail",
-            recommended_action: "markdown",
-            urgency: "Critical Risk",
-            rationale: "Inventory of 185 units expires in 4 days (Sell-by Nov 4). Current sales run-rate will leave 110 units unsold as perishable write-off. Triggering an automated 30% digital/shelf markdown ($5.99 → $4.19) clears 94% of stock before expiration.",
-            expected_impact: "Recovers $775 in gross cash flow; reduces perishable landfill waste by 92%.",
-            signals: {
-              sales_velocity: "-14% sluggish (18 units/day)",
-              inventory_on_hand: 185,
-              days_of_supply: 10.2,
-              supplier_lead_time_days: 3,
-              active_promotion: "Expiring Batch Alert",
-              unit_price: 5.99,
-              weather_condition: "Overcast",
-              competitor_price: 5.79,
-              local_event: null
-            },
-            chain_impact: {
-              demand: "Price elasticity lift expected at +68%",
-              inventory: "Clears expiring lot to 8 units prior to cut-off",
-              replenishment: "Next fresh batch order shifted by 2 days",
-              logistics: "Local shelf re-tagging & mobile app push",
-              margin: "Recovers 70% cost basis vs 0% total write-off",
-              customer_experience: "Value-seeking shoppers rewarded; fresh image kept"
-            },
-            status: "pending",
-            confidence_score: 0.978
-          },
-          {
-            id: "DEC-8094",
-            sku_id: "SKU-6520",
-            sku_name: "Sparkling Ice Black Raspberry 17oz",
-            category: "Beverages & Refreshment",
-            store_id: "STR-104",
-            store_name: "Store #104 Downtown Hub",
-            channel: "Express Grab & Go",
-            recommended_action: "increase allocation",
-            urgency: "High",
-            rationale: "Unseasonably high temperature (+14°F above norm) and promotional flyer feature is driving 2.6x demand lift. Central warehouse allocation should be increased from standard 30 cases to 85 cases for the next replenishment cycle.",
-            expected_impact: "Captures $2,840 incremental margin; prevents peak-hour afternoon cooler stockout.",
-            signals: {
-              sales_velocity: "+160% extreme spike (140 units/day)",
-              inventory_on_hand: 95,
-              days_of_supply: 0.7,
-              supplier_lead_time_days: 4,
-              active_promotion: "Buy 2 Get 1 Free flyer",
-              unit_price: 1.49,
-              weather_condition: "Heatwave (88°F)",
-              competitor_price: 1.59,
-              local_event: "Street Food Carnival"
-            },
-            chain_impact: {
-              demand: "Surging beverage impulse buys",
-              inventory: "Cooler doors clearing 4x faster than usual",
-              replenishment: "Priority allocation at Central DC slotting",
-              logistics: "Direct store delivery wave scheduled 06:00",
-              margin: "Strong unit velocity yields +$1,120 profit",
-              customer_experience: "Ice-cold drinks ready on shelves"
-            },
-            status: "pending",
-            confidence_score: 0.991
-          },
-          {
-            id: "DEC-8095",
-            sku_id: "SKU-7731",
-            sku_name: "Barilla Penne Rigate Pasta 16oz",
-            category: "Dry Grocery & Pantry",
-            store_id: "STR-502",
-            store_name: "Store #502 Eastgate Center",
-            channel: "Omnichannel",
-            recommended_action: "adjust promotion",
-            urgency: "Moderate",
-            rationale: "Primary supplier lead time delayed by 11 days due to rail transit maintenance. A planned 25% off promotional campaign will trigger a catastrophic stockout within 48 hours. Recommend pausing promo banner and shifting feature to De Cecco pasta to protect fulfillment.",
-            expected_impact: "Prevents 340 backorders; protects 98.4% omni-channel order fill rate.",
-            signals: {
-              sales_velocity: "+45% promo anticipation",
-              inventory_on_hand: 140,
-              days_of_supply: 3.1,
-              supplier_lead_time_days: 18,
-              active_promotion: "Planned 25% Weekly Feature",
-              unit_price: 1.89,
-              weather_condition: "Normal",
-              competitor_price: 1.79,
-              local_event: null
-            },
-            chain_impact: {
-              demand: "Pacing demand to match delayed supplier arrival",
-              inventory: "Stretches remaining inventory until new restock",
-              replenishment: "PO #4928 expedited via alternative trucking",
-              logistics: "Prevents backlogged store receiving docks",
-              margin: "Protects full price margin while supply is constrained",
-              customer_experience: "Eliminates cancelled online grocery orders"
-            },
-            status: "pending",
-            confidence_score: 0.952
-          },
-          {
-            id: "DEC-8096",
-            sku_id: "SKU-3319",
-            sku_name: "Oatly Barista Edition Oat Milk 32oz",
-            category: "Chilled Dairy & Plant-Based",
-            store_id: "STR-104",
-            store_name: "Store #104 Downtown Hub",
-            channel: "Coffee Bar & Retail",
-            recommended_action: "substitute product",
-            urgency: "High",
-            rationale: "Oatly distributor is currently experiencing an OEM packaging stockout across regional distribution. Recommend activating automated customer substitution rule on shelf and e-commerce cart: offer Califia Farms Barista Blend with zero price penalty.",
-            expected_impact: "Retains 92% of barista-grade plant milk sales; zero lost basket conversions.",
-            signals: {
-              sales_velocity: "Stockout (0 units on hand)",
-              inventory_on_hand: 0,
-              days_of_supply: 0.0,
-              supplier_lead_time_days: 14,
-              active_promotion: "None",
-              unit_price: 5.49,
-              weather_condition: "Normal",
-              competitor_price: 5.49,
-              local_event: null
-            },
-            chain_impact: {
-              demand: "Redirected to Califia Farms Barista (+48 units/day)",
-              inventory: "Califia on-hand at 140 units (healthy 8 days)",
-              replenishment: "Califia supplier order boosted by 30%",
-              logistics: "Seamless shelf sticker re-slotting",
-              margin: "Neutral margin parity ($2.10 gross/unit)",
-              customer_experience: "Shopper finds suitable premium alternative"
-            },
-            status: "pending",
-            confidence_score: 0.971
-          },
-          {
-            id: "DEC-8097",
-            sku_id: "SKU-1088",
-            sku_name: "Heinz Tomato Ketchup 32oz",
-            category: "Condiments & Sauces",
-            store_id: "STR-208",
-            store_name: "Store #208 Westside Suburb",
-            channel: "Physical Retail",
-            recommended_action: "take no action",
-            urgency: "Optimal",
-            rationale: "Current stock is 94 units (16.2 days of supply). Weekly demand velocity is stable (5.8 units/day). Supplier lead time is reliable at 3 days. Price point is competitive with regional market. No intervention needed; baseline replenishment pipeline is healthy.",
-            expected_impact: "Avoids unnecessary logistic overhead and labor churn; preserves stable supply.",
-            signals: {
-              sales_velocity: "Stable (5.8 units/day)",
-              inventory_on_hand: 94,
-              days_of_supply: 16.2,
-              supplier_lead_time_days: 3,
-              active_promotion: "None",
-              unit_price: 3.99,
-              weather_condition: "Normal",
-              competitor_price: 4.19,
-              local_event: null
-            },
-            chain_impact: {
-              demand: "Steady predictable baseline",
-              inventory: "Within optimal safety stock band (14-21 days)",
-              replenishment: "Standard automated reorder trigger in 8 days",
-              logistics: "No special routing required",
-              margin: "Consistent 34% margin",
-              customer_experience: "Consistent product availability"
-            },
-            status: "pending",
-            confidence_score: 0.995
-          }
-        ]);
-        setBaselineData({
-          summary: "Compared against standard legacy statistical forecasting baseline (ARIMA / Moving Average + Static Min-Max Reorder Points), the RetailSense Agentic AI system optimizes end-to-end connected decisions across 5 critical enterprise dimensions.",
-          metrics: [
-            {
-              metric_name: "Stockout Rate",
-              baseline_value: "14.8%",
-              ai_value: "2.1%",
-              improvement: "-85.8% (Stockouts averted)",
-              description: "AI connects real-time sales spikes with supplier lead times and weather to order before shelf empty."
-            },
-            {
-              metric_name: "Excess Inventory Tied Capital",
-              baseline_value: "$480,000",
-              ai_value: "$140,000",
-              improvement: "-70.8% ($340K cash freed)",
-              description: "Intra-store transfers and dynamic markdown rules eliminate dormant warehouse deadstock."
-            },
-            {
-              metric_name: "Customer Service Level (In-Stock %)",
-              baseline_value: "91.2%",
-              ai_value: "98.6%",
-              improvement: "+7.4 percentage points",
-              description: "Consistent cross-channel product availability keeps shoppers loyal and prevents basket abandonment."
-            },
-            {
-              metric_name: "Gross Profit Margin",
-              baseline_value: "26.4%",
-              ai_value: "31.8%",
-              improvement: "+5.4 percentage points",
-              description: "Protects full-price sell-through and reduces deep emergency fire-sale write-downs."
-            },
-            {
-              metric_name: "Decision Accuracy vs Actual Need",
-              baseline_value: "68.5%",
-              ai_value: "98.2%",
-              improvement: "+29.7 percentage points",
-              description: "Agentic multi-signal reasoning prevents bullwhip distortion across upstream supply chains."
-            }
-          ],
-          total_stockouts_averted: 3420,
-          excess_inventory_savings_usd: 340000.0,
-          margin_expansion_pts: 5.4
-        });
-      }
-    };
-
-    fetchDecisionsData();
-  }, []);
-
-  const handleToggleSidebar = () => {
-    if (window.innerWidth < 1024) {
-      setIsMobileMenuOpen((prev) => !prev);
-    } else {
-      setIsSidebarCollapsed((prev) => !prev);
-    }
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(''), 4000);
   };
 
-  const handleExecuteAction = async (decision) => {
-    setExecutingId(decision.id);
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001/api/v1';
-
+  const fetchKpis = async () => {
     try {
-      await fetch(`${apiUrl}/decisions/${decision.id}/execute`, { method: 'POST' });
-    } catch (err) {
-      console.warn('Backend execute fallback:', err);
+      const res = await fetch('http://localhost:8000/api/v1/dashboard/kpis');
+      if (res.ok) {
+        setKpis(await res.json());
+        return;
+      }
+    } catch (e) {}
+    setKpis({
+      service_level: { value: "96.8%", target: "95.0%", change: "+2.4%", favorable: true, subtitle: "5,120 orders fulfilled" },
+      stockout_risk: { value: "₹38,000", items_count: 2, change: "-42.1%", favorable: true, subtitle: "2 critical SKUs need PO" },
+      excess_inventory: { value: "₹8,420", items_count: 1, change: "-18.5%", favorable: true, subtitle: "1 markdown candidate" },
+      projected_margin: { value: "₹1,42,800", rate: "23.4%", change: "+5.2%", favorable: true, subtitle: "AI margin expansion" },
+      orders_progress: { fulfilled: 125090, total_demand: 200000, percentage: 62.5 }
+    });
+  };
+
+  const fetchRecommendations = async () => {
+    try {
+      const res = await fetch('http://localhost:8000/api/v1/recommendations');
+      if (res.ok) {
+        setRecommendations(await res.json());
+        return;
+      }
+    } catch (e) {}
+    setRecommendations([
+      { rec_id: 1, sku: "SKU-4412", name: "Royal Basmati Rice 5 kg", category: "Grains & Staples", action_type: "replenish", badge: "Replenish", quantity: 120, timing: "Order by Tuesday", expected_value: 38000.00, confidence: "high", rationale: "Stock covers 2.1 days, supplier takes 6 days, festival promotion raises demand ~35%, so a stockout is likely on Thursday.", expected_impact: "Avoids ~₹38,000 in lost sales; order cost ₹4,500.", alternatives_considered: "Transfer (no second store); markdown not applicable; do nothing loses ~₹38,000.", status: "pending" },
+      { rec_id: 2, sku: "SKU-8801", name: "Celebration Assorted Gift Box 500g", category: "Packaged & Confectionery", action_type: "markdown", badge: "Markdown", quantity: 185, timing: "Execute today", expected_value: 8420.00, confidence: "high", rationale: "Stock covers 48 days against 14-day target. Shelf life expires in 22 days. A 25% markdown stimulates velocity before write-off.", expected_impact: "Recovers ~₹44,400 capital, preventing ₹8,420 spoilage loss.", alternatives_considered: "Vendor return rejected (30% restocking penalty + freight); do nothing writes off ₹33,300.", status: "pending" },
+      { rec_id: 3, sku: "SKU-3110", name: "Refined Sunflower Oil 5L Jar", category: "Edible Oils & Cooking", action_type: "adjust_promotion", badge: "Adjust Promo", quantity: 0, timing: "Effective tomorrow", expected_value: 16800.00, confidence: "medium", rationale: "Current 20% discount is driving depletion 2.4x faster than supplier lead time. Dampening discount to 10% extends cover by 6 days and preserves margin.", expected_impact: "Protects ₹16,800 gross margin while preventing premature stockout.", alternatives_considered: "Rush supplier order (shipping penalty ₹6,000); cancel promo completely.", status: "pending" },
+      { rec_id: 4, sku: "SKU-5521", name: "Premium Filter Coffee 500g", category: "Beverages", action_type: "substitute", badge: "Substitute", quantity: 40, timing: "Front endcap today", expected_value: 6200.00, confidence: "high", rationale: "Primary Gourmet Arabica blend is delayed at customs. Cross-merchandise Premium South Indian Filter Coffee as substitute to capture 70% of displaced shoppers.", expected_impact: "Recovers ₹6,200 revenue otherwise lost to competitors.", alternatives_considered: "Leave shelf empty (100% loss); discount unrelated tea.", status: "pending" },
+      { rec_id: 5, sku: "SKU-6033", name: "Citrus Surface Cleaner 2L", category: "Household & Cleaning", action_type: "no_action", badge: "No Action", quantity: 0, timing: "Re-evaluate next cycle", expected_value: 0.00, confidence: "high", rationale: "Inventory cover is 14.2 days, perfectly balanced with the 14-day target buffer. Reorder point not yet triggered.", expected_impact: "Prevents premature capital tie-up; zero holding cost penalty.", alternatives_considered: "Early order placement (violates minimum cashflow thresholds).", status: "approved" }
+    ]);
+  };
+
+  const fetchRiskBoard = async () => {
+    try {
+      const res = await fetch('http://localhost:8000/api/v1/inventory/risk-board');
+      if (res.ok) {
+        setRiskBoard(await res.json());
+        return;
+      }
+    } catch (e) {}
+    setRiskBoard([
+      { product_id: 1, sku: "SKU-4412", name: "Royal Basmati Rice 5 kg", category: "Grains & Staples", on_hand: 38, daily_demand: 18.0, lead_time_days: 6.0, days_of_cover: 2.1, reorder_point: 144, risk_type: "Critical Stockout", risk_score: 92, days_to_expiry: 320, supplier: "Bharat Agro" },
+      { product_id: 4, sku: "SKU-8801", name: "Celebration Gift Box 500g", category: "Confectionery", on_hand: 240, daily_demand: 5.0, lead_time_days: 7.0, days_of_cover: 48.0, reorder_point: 45, risk_type: "Excess / Expiry", risk_score: 78, days_to_expiry: 22, supplier: "Mondelez India" },
+      { product_id: 5, sku: "SKU-3110", name: "Refined Sunflower Oil 5L", category: "Cooking Oils", on_hand: 45, daily_demand: 12.0, lead_time_days: 5.0, days_of_cover: 3.8, reorder_point: 84, risk_type: "Critical Stockout", risk_score: 85, days_to_expiry: 180, supplier: "Fortune Agro" },
+      { product_id: 2, sku: "SKU-2209", name: "Chakki Fresh Atta 10 kg", category: "Grains & Staples", on_hand: 210, daily_demand: 15.0, lead_time_days: 4.0, days_of_cover: 14.0, reorder_point: 90, risk_type: "Healthy", risk_score: 5, days_to_expiry: 90, supplier: "Bharat Agro" },
+      { product_id: 3, sku: "SKU-1044", name: "Pasteurized Whole Milk 1L", category: "Dairy & Fresh", on_hand: 95, daily_demand: 85.0, lead_time_days: 1.0, days_of_cover: 1.1, reorder_point: 170, risk_type: "High Velocity", risk_score: 45, days_to_expiry: 3, supplier: "Nandini Dairy" }
+    ]);
+  };
+
+  const fetchBacktest = async () => {
+    try {
+      const res = await fetch('http://localhost:8000/api/v1/backtest');
+      if (res.ok) {
+        setBacktest(await res.json());
+        return;
+      }
+    } catch (e) {}
+    setBacktest({
+      summary: { period: "Last 6 Weeks Holdout Replay", sku_count: 120, ai_roi_multiple: "4.8x", annualized_savings: "₹4,12,000" },
+      comparison: [
+        { metric: "Stockout Rate", baseline: "14.8%", ai: "4.2%", change: "-71.6%", favorable: true, impact: "10.6% fewer out-of-stock incidents" },
+        { metric: "Service Level", baseline: "85.2%", ai: "96.8%", change: "+11.6%", favorable: true, impact: "Exceeds 95% SLA target" },
+        { metric: "Excess Stock Value", baseline: "₹24,500", ai: "₹7,800", change: "-68.2%", favorable: true, impact: "₹16,700 tied capital unlocked" },
+        { metric: "Gross Margin", baseline: "18.2%", ai: "23.4%", change: "+5.2%", favorable: true, impact: "₹16,429 net profit increase" },
+        { metric: "Holding Cost", baseline: "₹3,675", ai: "₹1,170", change: "-68.2%", favorable: true, impact: "Lower warehouse footprint" }
+      ],
+      chart_data: {
+        weeks: ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5", "Week 6"],
+        baseline_stockouts: [16.2, 14.8, 15.5, 17.1, 13.9, 14.8],
+        ai_stockouts: [9.1, 6.4, 5.0, 4.2, 3.8, 4.2],
+        baseline_service_level: [83.8, 85.2, 84.5, 82.9, 86.1, 85.2],
+        ai_service_level: [90.9, 93.6, 95.0, 95.8, 96.2, 96.8]
+      }
+    });
+  };
+
+  const fetchDataIssues = async () => {
+    try {
+      const res = await fetch('http://localhost:8000/api/v1/data-quality');
+      if (res.ok) {
+        setDataIssues(await res.json());
+        return;
+      }
+    } catch (e) {}
+    setDataIssues([
+      { issue_id: 1, sku: "SKU-4412", name: "Royal Basmati Rice 5 kg", issue_type: "zero_stock_lost_demand", severity: "critical", details: "SKU-4412 had 2 zero-stock days last week. Recorded 0 sales was unconstrained lost demand (~42 units); unobserved demand reconstructed." },
+      { issue_id: 2, sku: "SKU-8801", name: "Celebration Gift Box 500g", issue_type: "negative_stock_anomaly", severity: "warning", details: "Dirty POS sync recorded -3 on_hand. Automatically clamped to 0 and flagged in quality audit ledger." }
+    ]);
+  };
+
+  const handleDecide = async (recId, decisionType, editedQty = null, reason = "") => {
+    try {
+      await fetch(`http://localhost:8000/api/v1/recommendations/${recId}/decide`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ decision: decisionType, edited_quantity: editedQty, reason })
+      });
+    } catch (e) {}
+
+    setRecommendations(prev => prev.map(r => {
+      if (r.rec_id === recId) {
+        return {
+          ...r,
+          status: decisionType,
+          quantity: editedQty !== null ? editedQty : r.quantity
+        };
+      }
+      return r;
+    }));
+
+    if (decisionType === 'approved') {
+      showToast(`✅ Approved Rec #${recId}! Purchase Order dispatched.`);
+    } else if (decisionType === 'modified') {
+      showToast(`✏️ Modified Rec #${recId} (${editedQty} units). Order updated.`);
+    } else {
+      showToast(`❌ Rejected Rec #${recId}. Logged to audit ledger.`);
     }
 
-    // Optimistic local state update
-    setDecisions((prev) =>
-      prev.map((d) => (d.id === decision.id ? { ...d, status: 'executed' } : d))
-    );
+    setSelectedRecForModify(null);
+  };
 
-    const actionVerb = decision.recommended_action === 'replenish'
-      ? 'Replenishment order dispatched'
-      : decision.recommended_action === 'transfer inventory'
-      ? 'Intra-store transfer order routed'
-      : decision.recommended_action === 'markdown'
-      ? 'Digital shelf markdown scheduled'
-      : `${decision.recommended_action.toUpperCase()} action executed`;
-
-    setToastMessage(`✓ ${actionVerb} for ${decision.sku_name} at ${decision.store_name}.`);
-    setExecutingId(null);
+  const handleRunPipeline = async () => {
+    setIsEngineRunning(true);
+    try {
+      await fetch('http://localhost:8000/api/v1/pipeline/run', { method: 'POST' });
+    } catch (e) {}
 
     setTimeout(() => {
-      setToastMessage('');
-    }, 4500);
+      setIsEngineRunning(false);
+      showToast("🚀 Pipeline run completed! 5 actions ranked.");
+      fetchKpis();
+      fetchRecommendations();
+      fetchRiskBoard();
+    }, 1000);
   };
 
+  const handleSendChatMessage = async (e) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    const userText = chatInput.trim();
+    setChatInput('');
+    const newMsg = {
+      id: Date.now(),
+      sender: 'user',
+      text: userText,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+    setChatMessages(prev => [...prev, newMsg]);
+
+    try {
+      const res = await fetch('http://localhost:8000/api/v1/whatsapp/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userText })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setChatMessages(data.messages);
+        return;
+      }
+    } catch (e) {}
+
+    setTimeout(() => {
+      let botReply = "🤖 PulseRetail Bot: Ask 'Which items will run out this week?', 'Show markdowns', or 'What is our service level?'";
+      if (userText.toLowerCase().includes('run out') || userText.toLowerCase().includes('stockout')) {
+        botReply = "🚨 *Stockout Alert:* Basmati Rice 5kg (2.1 days cover) and Sunflower Oil (3.8 days cover) are at critical risk. Tap [Approve] to order.";
+      } else if (userText.toLowerCase().includes('service level')) {
+        botReply = "📊 Service Level is currently 96.8% (Target: 95.0%, +2.4% vs baseline).";
+      } else if (userText.toLowerCase().includes('approve') || userText === '1') {
+        handleDecide(1, 'approved');
+        botReply = "✅ Approved! Purchase order #1042 for 120 units of Basmati Rice dispatched to Bharat Agro Foods.";
+      }
+
+      setChatMessages(prev => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          sender: 'bot',
+          text: botReply,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }
+      ]);
+    }, 500);
+  };
+
+  const handleExportCsv = () => {
+    window.open('http://localhost:8000/api/v1/export/purchase-orders', '_blank');
+    showToast("📥 Exporting approved purchase orders as CSV...");
+  };
+
+  // Nav items from Image 3 layout
   const navItems = [
-    {
-      id: 'prescriptions',
-      name: 'Prescribed Decisions',
-      icon: Sparkles,
-      count: decisions.filter(d => d.status === 'pending').length
-    },
-    {
-      id: 'signals',
-      name: 'Signals & Telemetry',
-      icon: Activity,
-    },
-    {
-      id: 'flow',
-      name: 'Agentic Flow (Observe→Measure)',
-      icon: Layers,
-    },
-    {
-      id: 'baseline',
-      name: 'AI vs Baseline ROI',
-      icon: TrendingUp,
-    },
+    { id: 'overview', name: 'Overview', icon: LayoutGrid },
+    { id: 'actions', name: 'AI Insights & Decisions', icon: Sparkles, badge: recommendations.filter(r => r.status === 'pending').length },
+    { id: 'risk', name: 'All Reviews / Risk Board', icon: BarChart3 },
+    { id: 'forecast', name: 'Demand Forecasts', icon: TrendingUp },
+    { id: 'backtest', name: 'AI vs Baseline (Proof)', icon: CheckCircle2 },
+    { id: 'staff_todo', name: 'Store Staff To-Do', icon: Check },
+    { id: 'whatsapp', name: 'WhatsApp Bot Simulator', icon: MessageSquare },
+    { id: 'quality', name: 'Data Quality Audit', icon: ShieldAlert, badge: dataIssues.length },
   ];
 
-  const currentTabName = navItems.find((item) => item.id === activeTab)?.name || 'Prescribed Decisions';
+  const currentTabName = navItems.find((item) => item.id === activeTab)?.name || 'Overview';
 
-  // Action badge color styling
-  const getActionBadgeClass = (action) => {
-    switch (action.toLowerCase()) {
-      case 'replenish':
-        return 'bg-indigo-50 text-[#5244E9] border-indigo-200/80';
-      case 'transfer inventory':
-        return 'bg-blue-50 text-blue-700 border-blue-200/80';
-      case 'increase allocation':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200/80';
-      case 'markdown':
-        return 'bg-amber-50 text-amber-700 border-amber-200/80';
-      case 'adjust promotion':
-        return 'bg-rose-50 text-rose-700 border-rose-200/80';
-      case 'substitute product':
-        return 'bg-cyan-50 text-cyan-700 border-cyan-200/80';
-      case 'take no action':
-      default:
-        return 'bg-slate-50 text-slate-600 border-slate-200/80';
+  // Orders Chart Data
+  const ordersChartData = [
+    {
+      x: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      y: [200, 300, 280, 350, 150, 350, 300, 100, 120, 220, 200, 300],
+      name: 'In-store',
+      type: 'bar',
+      marker: { color: '#5244E9' }
+    },
+    {
+      x: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      y: [150, 230, 380, 200, 170, 290, 300, 100, 300, 230, 120, 150],
+      name: 'Online',
+      type: 'bar',
+      marker: { color: '#cbd5e1' }
     }
-  };
+  ];
 
-  const getUrgencyBadge = (urgency) => {
-    if (urgency === 'Critical Risk') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
-          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-          Critical Risk
-        </span>
-      );
+  const backtestChartData = backtest ? [
+    {
+      x: backtest.chart_data.weeks,
+      y: backtest.chart_data.baseline_stockouts,
+      name: 'Baseline Stockout %',
+      type: 'scatter',
+      mode: 'lines+markers',
+      line: { color: '#f43f5e', width: 2.5, dash: 'dot' }
+    },
+    {
+      x: backtest.chart_data.weeks,
+      y: backtest.chart_data.ai_stockouts,
+      name: 'AI Policy Stockout %',
+      type: 'scatter',
+      mode: 'lines+markers',
+      line: { color: '#10b981', width: 3 }
     }
-    if (urgency === 'High') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-          High Priority
-        </span>
-      );
-    }
-    if (urgency === 'Moderate') {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-          Moderate
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-        Optimal State
-      </span>
-    );
-  };
-
-  // Filtered decisions list
-  const filteredDecisions = decisions.filter((d) => {
-    const matchesAction = selectedActionFilter === 'all' || d.recommended_action.toLowerCase() === selectedActionFilter.toLowerCase();
-    const matchesStore = selectedStoreFilter === 'all' || d.store_id.toLowerCase() === selectedStoreFilter.toLowerCase();
-    const matchesSearch = !searchQuery || 
-      d.sku_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      d.sku_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      d.store_name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesAction && matchesStore && matchesSearch;
-  });
+  ] : [];
 
   return (
     <div className="min-h-screen bg-[#FDFDFE] flex flex-col lg:flex-row font-sans text-slate-800 antialiased selection:bg-indigo-100 selection:text-indigo-900">
       
-      {/* Toast Notification Banner */}
+      {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 max-w-md bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-slate-700 animate-in fade-in slide-in-from-bottom-5">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-          <p className="text-xs font-medium leading-relaxed">{toastMessage}</p>
-          <button onClick={() => setToastMessage('')} className="text-slate-400 hover:text-white ml-auto">
-            <X className="w-4 h-4" />
-          </button>
+        <div className="fixed top-5 right-5 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl text-xs font-semibold flex items-center gap-2 border border-slate-700 animate-in fade-in slide-in-from-top-2">
+          <Info className="w-4 h-4 text-indigo-400" />
+          <span>{toastMessage}</span>
         </div>
       )}
 
@@ -538,12 +379,11 @@ export default function Dashboard({
         <div 
           onClick={() => setIsMobileMenuOpen(false)}
           className="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-40 lg:hidden transition-opacity duration-300 ease-in-out"
-          aria-hidden="true"
         />
       )}
 
       {/* ========================================================
-          SIDEBAR NAVIGATION (Collapsible on Desktop & Drawer on Mobile)
+          SIDEBAR NAVIGATION (Collapsible on Desktop & Drawer on Mobile - Incoming from origin/main)
       ======================================================== */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 bg-white border-r border-slate-100 flex flex-col justify-between transition-all duration-300 ease-in-out lg:static lg:z-auto ${
@@ -594,7 +434,7 @@ export default function Dashboard({
             {/* Mobile Close Button */}
             <button
               onClick={() => setIsMobileMenuOpen(false)}
-              className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
               aria-label="Close menu"
             >
               <X className="w-5 h-5" />
@@ -627,7 +467,7 @@ export default function Dashboard({
                     title={isSidebarCollapsed ? item.name : undefined}
                     className={`w-full flex items-center ${
                       isSidebarCollapsed ? 'justify-center p-2.5' : 'justify-between px-3.5 py-2.5'
-                    } rounded-xl text-[13.5px] font-medium transition-all duration-150 text-left ${
+                    } rounded-xl text-[13.5px] font-medium transition-all duration-150 text-left cursor-pointer ${
                       isActive
                         ? 'bg-[#F5F3FF] text-[#5244E9] font-bold shadow-xs'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
@@ -641,9 +481,9 @@ export default function Dashboard({
                         <span className="truncate">{item.name}</span>
                       )}
                     </div>
-                    {!isSidebarCollapsed && item.count !== undefined && item.count > 0 && (
+                    {!isSidebarCollapsed && item.badge > 0 && (
                       <span className="px-2 py-0.5 text-[10.5px] font-bold rounded-full bg-[#5244E9] text-white">
-                        {item.count}
+                        {item.badge}
                       </span>
                     )}
                   </button>
@@ -689,13 +529,19 @@ export default function Dashboard({
       ======================================================== */}
       <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
         
-        {/* Top Header Bar */}
+        {/* Top Header Bar from incoming */}
         <header className="h-16 px-4 sm:px-8 border-b border-slate-100 bg-white/90 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between">
           
           {/* Left: Hamburger Toggle + Breadcrumbs */}
           <div className="flex items-center gap-2 sm:gap-3.5">
             <button
-              onClick={handleToggleSidebar}
+              onClick={() => {
+                if (window.innerWidth < 1024) {
+                  setIsMobileMenuOpen((prev) => !prev);
+                } else {
+                  setIsSidebarCollapsed((prev) => !prev);
+                }
+              }}
               className="p-2 -ml-1 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:scale-95 transition-all cursor-pointer"
               aria-label="Toggle navigation menu"
               title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -714,9 +560,19 @@ export default function Dashboard({
             </nav>
           </div>
 
-          {/* Right: Notifications + User Profile */}
+          {/* Right: Actions, Notifications + User Profile */}
           <div className="flex items-center gap-2.5 sm:gap-3">
             
+            {/* Run Engine Button */}
+            <button
+              onClick={handleRunPipeline}
+              disabled={isEngineRunning}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#5244E9] hover:bg-[#4333DE] text-white text-xs font-semibold shadow-xs transition-all cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isEngineRunning ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">{isEngineRunning ? 'Running...' : 'Run Engine'}</span>
+            </button>
+
             {/* Notification Bell */}
             <div className="relative">
               <button
@@ -784,19 +640,19 @@ export default function Dashboard({
                 <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-50 animate-in fade-in zoom-in-95">
                   <div className="px-3.5 py-2.5 border-b border-slate-100">
                     <div className="flex items-center justify-between">
-                      <p className="text-xs font-bold text-slate-800 truncate">{currentUser.name}</p>
+                      <p className="text-xs font-bold text-slate-800 truncate">{currentUser.name || 'Alex Morgan'}</p>
                       <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-50 text-[#5244E9] border border-indigo-100">
                         {currentRoleLabel}
                       </span>
                     </div>
-                    <p className="text-[10px] text-slate-400 truncate mt-0.5">{currentUser.email}</p>
+                    <p className="text-[10px] text-slate-400 truncate mt-0.5">{currentUser.email || 'manager@retailchain.com'}</p>
                   </div>
                   <div className="py-1 text-slate-700 text-xs">
-                    <button className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-slate-50 text-left">
+                    <button className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-slate-50 text-left cursor-pointer">
                       <User className="w-3.5 h-3.5 text-slate-400" />
                       <span>Operator Profile</span>
                     </button>
-                    <button className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-slate-50 text-left">
+                    <button className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-slate-50 text-left cursor-pointer">
                       <Settings className="w-3.5 h-3.5 text-slate-400" />
                       <span>Decision Rules</span>
                     </button>
@@ -804,7 +660,7 @@ export default function Dashboard({
                   <div className="border-t border-slate-100 pt-1">
                     <button 
                       onClick={onBackToLanding}
-                      className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-rose-50 text-rose-600 text-xs text-left"
+                      className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-rose-50 text-rose-600 text-xs text-left cursor-pointer"
                     >
                       <LogOut className="w-3.5 h-3.5" />
                       <span>Sign out</span>
@@ -815,275 +671,299 @@ export default function Dashboard({
             </div>
 
           </div>
+
         </header>
 
-        {/* Content Canvas */}
-        <main className="flex-1 p-4 sm:p-7 lg:p-8 max-w-[1400px] w-full mx-auto space-y-6">
-
-          {/* Top Executive KPI Ribbon */}
-          <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
-            <div className="bg-white p-4 rounded-2xl border border-slate-100/90 shadow-2xs hover:shadow-xs transition-all">
-              <div className="flex items-center justify-between text-slate-400 mb-1">
-                <span className="text-[11px] font-bold uppercase tracking-wider">Stockouts Averted</span>
-                <ShieldCheck className="w-4 h-4 text-emerald-500" />
-              </div>
-              <div className="text-[22px] font-[800] text-slate-900 tracking-tight">3,420</div>
-              <p className="text-[11px] font-semibold text-emerald-600 mt-0.5 flex items-center gap-1">
-                <span>↓ 85.8%</span>
-                <span className="text-slate-400 font-normal">vs legacy baseline</span>
-              </p>
-            </div>
-
-            <div className="bg-white p-4 rounded-2xl border border-slate-100/90 shadow-2xs hover:shadow-xs transition-all">
-              <div className="flex items-center justify-between text-slate-400 mb-1">
-                <span className="text-[11px] font-bold uppercase tracking-wider">Active Prescriptions</span>
-                <Sparkles className="w-4 h-4 text-[#5244E9]" />
-              </div>
-              <div className="text-[22px] font-[800] text-slate-900 tracking-tight">
-                {decisions.filter(d => d.status === 'pending').length} Actions
-              </div>
-              <p className="text-[11px] font-semibold text-[#5244E9] mt-0.5">
-                Ready to coordinate
-              </p>
-            </div>
-
-            <div className="bg-white p-4 rounded-2xl border border-slate-100/90 shadow-2xs hover:shadow-xs transition-all">
-              <div className="flex items-center justify-between text-slate-400 mb-1">
-                <span className="text-[11px] font-bold uppercase tracking-wider">Excess Capital Freed</span>
-                <DollarSign className="w-4 h-4 text-blue-500" />
-              </div>
-              <div className="text-[22px] font-[800] text-slate-900 tracking-tight">$340,000</div>
-              <p className="text-[11px] font-semibold text-blue-600 mt-0.5">
-                -70.8% Deadstock cut
-              </p>
-            </div>
-
-            <div className="bg-white p-4 rounded-2xl border border-slate-100/90 shadow-2xs hover:shadow-xs transition-all">
-              <div className="flex items-center justify-between text-slate-400 mb-1">
-                <span className="text-[11px] font-bold uppercase tracking-wider">In-Stock Service Level</span>
-                <Percent className="w-4 h-4 text-emerald-500" />
-              </div>
-              <div className="text-[22px] font-[800] text-slate-900 tracking-tight">98.6%</div>
-              <p className="text-[11px] font-semibold text-emerald-600 mt-0.5">
-                +7.4 pts vs 91.2% base
-              </p>
-            </div>
-
-            <div className="col-span-2 md:col-span-1 bg-white p-4 rounded-2xl border border-slate-100/90 shadow-2xs hover:shadow-xs transition-all">
-              <div className="flex items-center justify-between text-slate-400 mb-1">
-                <span className="text-[11px] font-bold uppercase tracking-wider">Decision Accuracy</span>
-                <CheckCircle2 className="w-4 h-4 text-[#5244E9]" />
-              </div>
-              <div className="text-[22px] font-[800] text-slate-900 tracking-tight">98.2%</div>
-              <p className="text-[11px] font-semibold text-[#5244E9] mt-0.5">
-                Multi-signal reasoned
-              </p>
-            </div>
-          </section>
-
-          {/* ========================================================
-              TAB 1: PRESCRIBED DECISIONS
-          ======================================================== */}
-          {activeTab === 'prescriptions' && (
-            <div className="space-y-4 animate-in fade-in duration-200">
+        {/* ========================================================
+            CONTENT CANVAS (Contains All Rich Challenge 10 Features)
+        ======================================================== */}
+        <main className="flex-1 p-4 sm:p-8 space-y-6 max-w-[1440px] w-full mx-auto">
+          
+          {/* TAB 1: OVERVIEW (Full KPI + Demand Fulfillment + Actions) */}
+          {activeTab === 'overview' && (
+            <div className="space-y-6">
               
-              {/* Filter & Search Bar */}
-              <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-2xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+              {/* 4 TOP KPI CARDS */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 
-                {/* Search SKU or Store */}
-                <div className="relative flex-1 max-w-md">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search SKU name, ID, or Store..."
-                    className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#5244E9] focus:bg-white transition-all"
-                  />
-                  {searchQuery && (
-                    <button 
-                      onClick={() => setSearchQuery('')}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
-                    >
-                      Clear
-                    </button>
-                  )}
+                <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex flex-col justify-between">
+                  <div className="flex items-center justify-between text-slate-400">
+                    <span className="text-xs font-semibold text-slate-600">Service Level</span>
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-[#2563EB]">
+                      <Store className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">{kpis?.service_level?.value || '96.8%'}</div>
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mt-1">
+                      <span>Target: 95.0%</span>
+                      <span className="text-emerald-600 font-bold">+2.4%</span>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Filters */}
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500 mr-1">
-                    <Filter className="w-3.5 h-3.5" />
-                    <span>Filter:</span>
+                <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex flex-col justify-between">
+                  <div className="flex items-center justify-between text-slate-400">
+                    <span className="text-xs font-semibold text-slate-600">Stockout Value at Risk</span>
+                    <div className="w-8 h-8 rounded-lg bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500">
+                      <AlertTriangle className="w-4 h-4" />
+                    </div>
                   </div>
+                  <div className="mt-3">
+                    <div className="text-2xl sm:text-3xl font-extrabold text-rose-600">{kpis?.stockout_risk?.value || '₹38,000'}</div>
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mt-1">
+                      <span>2 items critical</span>
+                      <span className="text-rose-600 font-bold">-42.1%</span>
+                    </div>
+                  </div>
+                </div>
 
-                  {/* Action filter */}
-                  <select
-                    value={selectedActionFilter}
-                    onChange={(e) => setSelectedActionFilter(e.target.value)}
-                    className="px-3 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:border-[#5244E9] cursor-pointer"
-                  >
-                    <option value="all">All Actions (7 Types)</option>
-                    <option value="replenish">Replenish</option>
-                    <option value="transfer inventory">Transfer Inventory</option>
-                    <option value="increase allocation">Increase Allocation</option>
-                    <option value="markdown">Markdown</option>
-                    <option value="adjust promotion">Adjust Promotion</option>
-                    <option value="substitute product">Substitute Product</option>
-                    <option value="take no action">Take No Action</option>
-                  </select>
+                <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex flex-col justify-between">
+                  <div className="flex items-center justify-between text-slate-400">
+                    <span className="text-xs font-semibold text-slate-600">Excess Stock Recovered</span>
+                    <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-500">
+                      <Percent className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">{kpis?.excess_inventory?.value || '₹8,420'}</div>
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mt-1">
+                      <span>1 markdown candidate</span>
+                      <span className="text-emerald-600 font-bold">-18.5%</span>
+                    </div>
+                  </div>
+                </div>
 
-                  {/* Store filter */}
-                  <select
-                    value={selectedStoreFilter}
-                    onChange={(e) => setSelectedStoreFilter(e.target.value)}
-                    className="px-3 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:border-[#5244E9] cursor-pointer"
-                  >
-                    <option value="all">All Stores & Channels</option>
-                    <option value="STR-104">Store #104 Downtown Hub</option>
-                    <option value="STR-208">Store #208 Westside Suburb</option>
-                    <option value="STR-310">Store #310 Metro Plaza</option>
-                    <option value="STR-502">Store #502 Eastgate Center</option>
-                  </select>
+                <div className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs flex flex-col justify-between">
+                  <div className="flex items-center justify-between text-slate-400">
+                    <span className="text-xs font-semibold text-slate-600">Projected Gross Margin</span>
+                    <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-500">
+                      <TrendingUp className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">{kpis?.projected_margin?.value || '₹1,42,800'}</div>
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mt-1">
+                      <span>Rate: 23.4%</span>
+                      <span className="text-emerald-600 font-bold">+5.2% lift</span>
+                    </div>
+                  </div>
                 </div>
 
               </div>
 
-              {/* Main Prescribed Decisions Table */}
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-2xs overflow-hidden">
-                <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-slate-900">
-                      Store & Channel Prescription Queue
-                    </h3>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">
-                      {filteredDecisions.length} Prescriptions
-                    </span>
+              {/* ORDERS & DEMAND FULFILLMENT */}
+              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6">
+                
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900">Orders & Demand Fulfillment</h2>
+                    <p className="text-xs text-slate-500 mt-0.5">Tracking seasonal customer demand against stock replenishment</p>
                   </div>
-                  <span className="text-[11px] text-slate-400">
-                    Ordered by risk priority & financial impact
-                  </span>
+
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-medium text-slate-700">
+                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{dateRange}</span>
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                    </div>
+
+                    <button
+                      onClick={handleRunPipeline}
+                      className="inline-flex items-center gap-1.5 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-xs transition-all"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add activity</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-6 items-center">
+                  
+                  {/* Left: Plotly Chart */}
+                  <div className="lg:col-span-2">
+                    <div className="h-[280px]">
+                      <PlotlyChart
+                        data={ordersChartData}
+                        layout={{
+                          barmode: 'group',
+                          bargap: 0.25,
+                          bargroupgap: 0.1,
+                          legend: { orientation: 'h', y: -0.2, x: 0.4 },
+                          yaxis: { gridcolor: '#f8fafc', zeroline: false }
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Right: Progress breakdown panel */}
+                  <div className="lg:col-span-1 p-6 rounded-2xl bg-[#FAFAFC] border border-slate-100 flex flex-col justify-between h-full">
+                    <div>
+                      <div className="flex items-center gap-4 text-xs font-semibold pb-3 border-b border-slate-200">
+                        <button 
+                          onClick={() => setDemandChartType('orders')}
+                          className={`${demandChartType === 'orders' ? 'text-[#2563EB] border-b-2 border-[#2563EB]' : 'text-slate-500'} pb-1`}
+                        >
+                          Orders
+                        </button>
+                        <button 
+                          onClick={() => setDemandChartType('sales')}
+                          className={`${demandChartType === 'sales' ? 'text-[#2563EB] border-b-2 border-[#2563EB]' : 'text-slate-500'} pb-1`}
+                        >
+                          Sales
+                        </button>
+                      </div>
+
+                      <div className="mt-4">
+                        <div className="text-3xl font-extrabold text-slate-900 tracking-tight">125,090</div>
+                        
+                        <div className="mt-3">
+                          <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+                            <div className="bg-[#2563EB] h-full rounded-full" style={{ width: '62.5%' }}></div>
+                          </div>
+                          <div className="flex justify-between text-[10px] text-slate-400 font-mono mt-1">
+                            <span>0.00</span>
+                            <span>200,000</span>
+                          </div>
+                        </div>
+
+                        <p className="text-xs text-slate-500 mt-4 leading-relaxed">
+                          A project-wise breakdown of total orders complemented by detailed insights.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 pt-4 border-t border-slate-200/80 space-y-2">
+                      <button 
+                        onClick={() => setActiveTab('actions')}
+                        className="w-full flex items-center justify-between text-xs font-semibold text-slate-700 hover:text-[#2563EB] transition-colors p-2 rounded-lg hover:bg-white cursor-pointer"
+                      >
+                        <span className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-[#2563EB]" />
+                          <span>Show all highlights</span>
+                        </span>
+                        <ChevronDown className="w-4 h-4 -rotate-90 text-slate-400" />
+                      </button>
+
+                      <button 
+                        onClick={() => setActiveTab('risk')}
+                        className="w-full flex items-center justify-between text-xs font-semibold text-slate-700 hover:text-[#2563EB] transition-colors p-2 rounded-lg hover:bg-white cursor-pointer"
+                      >
+                        <span className="flex items-center gap-2">
+                          <BarChart3 className="w-4 h-4 text-slate-600" />
+                          <span>Show all sales data</span>
+                        </span>
+                        <ChevronDown className="w-4 h-4 -rotate-90 text-slate-400" />
+                      </button>
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* RANKED ACTIONS TABLE */}
+              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+                <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900">Ranked Store Decisions & Top Products</h2>
+                    <p className="text-xs text-slate-500 mt-0.5">Autonomous actions ranked by expected profit impact</p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleExportCsv}
+                      className="inline-flex items-center gap-1.5 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-xs transition-all cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Export POs (CSV)</span>
+                    </button>
+                  </div>
                 </div>
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50/75 text-slate-500 font-bold uppercase tracking-wider text-[10px] border-b border-slate-100">
+                    <thead className="bg-[#FAFAFC] text-slate-500 font-semibold uppercase tracking-wider border-b border-slate-200">
                       <tr>
-                        <th className="py-3 px-4">Store / Channel</th>
-                        <th className="py-3 px-4">SKU & Category</th>
-                        <th className="py-3 px-4">Signals Detected</th>
-                        <th className="py-3 px-4">Prescribed Action</th>
-                        <th className="py-3 px-4 min-w-[280px]">Action Rationale ("Why")</th>
-                        <th className="py-3 px-4">Expected Impact</th>
-                        <th className="py-3 px-4 text-right">Execute Decision</th>
+                        <th className="py-3.5 px-4">Item & SKU</th>
+                        <th className="py-3.5 px-4">Action</th>
+                        <th className="py-3.5 px-4">Quantity & Timing</th>
+                        <th className="py-3.5 px-4">Why (LLM Rationale)</th>
+                        <th className="py-3.5 px-4">Expected Impact</th>
+                        <th className="py-3.5 px-4">Confidence</th>
+                        <th className="py-3.5 px-4 text-right">Decision</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100/80 text-slate-700">
-                      {filteredDecisions.map((decision) => {
-                        const isExecuted = decision.status === 'executed';
-                        const isExecuting = executingId === decision.id;
+                    <tbody className="divide-y divide-slate-100">
+                      {recommendations.map((rec) => {
+                        const isPending = rec.status === 'pending';
+                        const isApproved = rec.status === 'approved';
+
+                        let badgeClass = "bg-[#EEF4FF] text-[#2563EB]";
+                        if (rec.action_type === 'markdown') badgeClass = "bg-amber-50 text-amber-800 border border-amber-200";
+                        if (rec.action_type === 'substitute') badgeClass = "bg-purple-50 text-purple-800 border border-purple-200";
+                        if (rec.action_type === 'no_action') badgeClass = "bg-slate-100 text-slate-700";
 
                         return (
-                          <tr 
-                            key={decision.id}
-                            className={`hover:bg-slate-50/70 transition-colors ${
-                              isExecuted ? 'bg-slate-50/40 opacity-75' : ''
-                            }`}
-                          >
-                            {/* Store & Channel */}
-                            <td className="py-3.5 px-4 align-top">
-                              <div className="font-bold text-slate-900">{decision.store_name}</div>
-                              <div className="text-[11px] text-slate-400 mt-0.5">{decision.channel}</div>
-                              <div className="mt-1.5">{getUrgencyBadge(decision.urgency)}</div>
+                          <tr key={rec.rec_id} className="hover:bg-slate-50/70 transition-colors">
+                            <td className="py-3.5 px-4">
+                              <div className="font-bold text-slate-900">{rec.name}</div>
+                              <div className="text-[10px] text-slate-400 font-mono mt-0.5">{rec.sku} • {rec.category}</div>
                             </td>
-
-                            {/* SKU / Category */}
-                            <td className="py-3.5 px-4 align-top">
-                              <div className="font-bold text-slate-900">{decision.sku_name}</div>
-                              <div className="text-[11px] font-mono text-slate-400 mt-0.5">{decision.sku_id}</div>
-                              <div className="text-[10.5px] text-indigo-600 font-medium mt-1">{decision.category}</div>
-                            </td>
-
-                            {/* Signals */}
-                            <td className="py-3.5 px-4 align-top">
-                              <div className="space-y-1">
-                                <span className="inline-block px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-semibold text-[10.5px]">
-                                  Sales: {decision.signals.sales_velocity}
-                                </span>
-                                <div className="text-[11px] text-slate-600">
-                                  Stock: <strong className="text-slate-900">{decision.signals.inventory_on_hand} units</strong> ({decision.signals.days_of_supply}d supply)
-                                </div>
-                                <div className="text-[10px] text-slate-500">
-                                  Lead Time: {decision.signals.supplier_lead_time_days} days
-                                </div>
-                                {decision.signals.weather_condition && (
-                                  <div className="text-[10px] text-amber-600 font-medium">
-                                    ☁ {decision.signals.weather_condition}
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-
-                            {/* Recommended Action */}
-                            <td className="py-3.5 px-4 align-top">
-                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold border ${getActionBadgeClass(decision.recommended_action)}`}>
-                                <Sparkles className="w-3 h-3 shrink-0" />
-                                <span className="capitalize">{decision.recommended_action}</span>
+                            <td className="py-3.5 px-4">
+                              <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${badgeClass}`}>
+                                {rec.badge}
                               </span>
-                              <div className="text-[10px] text-slate-400 mt-1">
-                                Confidence: {(decision.confidence_score * 100).toFixed(1)}%
-                              </div>
                             </td>
-
-                            {/* Rationale */}
-                            <td className="py-3.5 px-4 align-top">
-                              <p className="text-[11.5px] text-slate-700 leading-relaxed font-normal">
-                                {decision.rationale}
-                              </p>
-                              <button
-                                onClick={() => setSelectedDecisionDetail(decision)}
-                                className="mt-1.5 text-[10.5px] font-bold text-[#5244E9] hover:underline flex items-center gap-1 cursor-pointer"
-                              >
-                                <span>Inspect Connected Chain (Demand → CX)</span>
-                                <ExternalLink className="w-3 h-3" />
-                              </button>
+                            <td className="py-3.5 px-4 font-medium text-slate-700">
+                              {rec.quantity > 0 ? `${rec.quantity} units` : 'N/A'}<br />
+                              <span className="text-[10px] text-slate-400">{rec.timing}</span>
                             </td>
-
-                            {/* Expected Impact */}
-                            <td className="py-3.5 px-4 align-top">
-                              <div className="text-[11px] font-semibold text-emerald-700 bg-emerald-50/80 border border-emerald-200/60 p-2 rounded-xl leading-snug">
-                                {decision.expected_impact}
-                              </div>
+                            <td className="py-3.5 px-4 max-w-xs text-slate-600 leading-relaxed">
+                              {rec.rationale}
                             </td>
-
-                            {/* Execute CTA */}
-                            <td className="py-3.5 px-4 align-top text-right">
-                              {isExecuted ? (
-                                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
-                                  <CheckCircle2 className="w-3.5 h-3.5" />
-                                  Executed
-                                </span>
+                            <td className="py-3.5 px-4">
+                              <div className="font-bold text-emerald-600">₹{rec.expected_value.toLocaleString()}</div>
+                              <div className="text-[10px] text-slate-400">{rec.expected_impact}</div>
+                            </td>
+                            <td className="py-3.5 px-4 font-semibold uppercase text-slate-700">
+                              {rec.confidence}
+                            </td>
+                            <td className="py-3.5 px-4 text-right">
+                              {isPending ? (
+                                <div className="inline-flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => handleDecide(rec.rec_id, 'approved')}
+                                    className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-xs cursor-pointer"
+                                  >
+                                    Approve
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setSelectedRecForModify(rec);
+                                      setModifyQty(rec.quantity.toString());
+                                    }}
+                                    className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium text-xs cursor-pointer"
+                                  >
+                                    Modify
+                                  </button>
+                                  <button
+                                    onClick={() => handleDecide(rec.rec_id, 'rejected')}
+                                    className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-rose-600 font-medium text-xs cursor-pointer"
+                                  >
+                                    Reject
+                                  </button>
+                                </div>
                               ) : (
-                                <button
-                                  onClick={() => handleExecuteAction(decision)}
-                                  disabled={isExecuting}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-[#5244E9] hover:bg-[#4333DE] active:scale-95 shadow-xs transition-all cursor-pointer disabled:opacity-50"
-                                >
-                                  {isExecuting ? (
-                                    <>
-                                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                      <span>Dispatching...</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <span>Execute Action</span>
-                                      <ArrowRight className="w-3.5 h-3.5" />
-                                    </>
-                                  )}
-                                </button>
+                                <span className={`inline-flex items-center gap-1 font-semibold text-xs capitalize ${
+                                  isApproved ? 'text-emerald-600' : 'text-slate-400'
+                                }`}>
+                                  {isApproved && <Check className="w-3.5 h-3.5" />}
+                                  {rec.status}
+                                </span>
                               )}
                             </td>
-
                           </tr>
                         );
                       })}
@@ -1096,373 +976,381 @@ export default function Dashboard({
             </div>
           )}
 
-          {/* ========================================================
-              TAB 2: SIGNALS & TELEMETRY MATRIX
-          ======================================================== */}
-          {activeTab === 'signals' && (
-            <div className="space-y-6 animate-in fade-in duration-200">
-              
-              <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-2xs">
-                <h3 className="text-sm font-bold text-slate-900 mb-1">
-                  Connected Signal Ingestion Pipeline
-                </h3>
-                <p className="text-xs text-slate-500 leading-relaxed max-w-3xl">
-                  Retail decisions cannot exist in isolation. Our agentic pipeline continuously ingests and correlates 
-                  multimodal enterprise telemetry to determine ripple effects before committing capital or replenishment trucks.
-                </p>
+          {/* TAB 2: AI INSIGHTS & ACTIONS */}
+          {activeTab === 'actions' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900">AI Insights & Action Board</h2>
+                  <p className="text-xs text-slate-500">Every decision card is complete with expected impact, alternatives evaluated, and guardrails.</p>
+                </div>
+                <button
+                  onClick={handleExportCsv}
+                  className="inline-flex items-center gap-2 px-3.5 py-2 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Export POs (CSV)</span>
+                </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                
-                {/* Signal Card 1: SKU Sales Velocity */}
-                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-2xs space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-900 flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-[#5244E9]" />
-                      SKU Sales Velocity & Demand Lift
-                    </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-[#5244E9]">
-                      Real-time POS
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 leading-normal">
-                    Monitors scan data down to the hour. Detects sudden velocity spikes (+34% to +160%) vs seasonality baselines.
-                  </p>
-                  <div className="p-3 bg-slate-50 rounded-xl space-y-1.5 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Active Tracked SKUs:</span>
-                      <strong className="text-slate-800">148,200</strong>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Hourly Scan Ingestion:</span>
-                      <strong className="text-emerald-600">3.2M transactions/hr</strong>
-                    </div>
-                  </div>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {recommendations.map(rec => (
+                  <div key={rec.rec_id} className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                        <span className="px-2.5 py-1 rounded-md bg-[#EEF4FF] text-[#2563EB] text-xs font-bold uppercase">
+                          {rec.badge}
+                        </span>
+                        <span className="text-xs font-semibold text-slate-500 uppercase">
+                          Confidence: {rec.confidence}
+                        </span>
+                      </div>
 
-                {/* Signal Card 2: Live Inventory & Days of Supply */}
-                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-2xs space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-900 flex items-center gap-2">
-                      <Boxes className="w-4 h-4 text-blue-500" />
-                      Live Inventory & Expiry Tracking
-                    </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-600">
-                      WMS & Store ERP
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 leading-normal">
-                    Tracks on-hand shelf inventory, backroom cases, and perishable lot sell-by dates to prevent expired stockouts.
-                  </p>
-                  <div className="p-3 bg-slate-50 rounded-xl space-y-1.5 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Stores Integrated:</span>
-                      <strong className="text-slate-800">42 Locations + 3 DCs</strong>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Perishable Waste Averted:</span>
-                      <strong className="text-emerald-600">92.4%</strong>
-                    </div>
-                  </div>
-                </div>
+                      <h3 className="text-base font-bold text-slate-900 mt-3">{rec.name}</h3>
 
-                {/* Signal Card 3: Supplier Lead Times */}
-                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-2xs space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-900 flex items-center gap-2">
-                      <Truck className="w-4 h-4 text-amber-500" />
-                      Supplier Lead Time & Reliability
-                    </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700">
-                      EDI / Supply Chain
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 leading-normal">
-                    Dynamically recalculates replenishment safety buffers when suppliers encounter transit bottlenecks or rail delays.
-                  </p>
-                  <div className="p-3 bg-slate-50 rounded-xl space-y-1.5 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Supplier OTIF Metric:</span>
-                      <strong className="text-slate-800">88.4% On-Time</strong>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Lead Time Variance:</span>
-                      <strong className="text-amber-600">± 3.4 days accounted</strong>
-                    </div>
-                  </div>
-                </div>
+                      <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
+                        <div className="bg-[#FAFAFC] p-3 rounded-xl border border-slate-100">
+                          <div className="text-slate-500 font-medium">Quantity & Timing</div>
+                          <div className="text-sm font-bold text-slate-900 mt-0.5">{rec.quantity > 0 ? `${rec.quantity} units` : 'N/A'} ({rec.timing})</div>
+                        </div>
+                        <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+                          <div className="text-emerald-700 font-medium">Expected Value</div>
+                          <div className="text-sm font-bold text-emerald-800 mt-0.5">₹{rec.expected_value.toLocaleString()}</div>
+                        </div>
+                      </div>
 
-                {/* Signal Card 4: Weather & Micro-climate */}
-                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-2xs space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-900 flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-cyan-500" />
-                      Weather & Local Events
-                    </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-cyan-50 text-cyan-700">
-                      External Feeds
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 leading-normal">
-                    Correlates heatwaves, marathons, and sporting events with hyper-localized demand surges for beverages and grab-and-go.
-                  </p>
-                  <div className="p-3 bg-slate-50 rounded-xl space-y-1.5 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Heatwave Coefficient:</span>
-                      <strong className="text-emerald-600">+160% Cold Drinks</strong>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Active Event Triggers:</span>
-                      <strong className="text-slate-800">2 Metro Marathons</strong>
-                    </div>
-                  </div>
-                </div>
+                      <div className="mt-4 p-3 rounded-xl bg-[#FAFAFC] text-xs text-slate-700 leading-relaxed">
+                        <span className="font-semibold text-slate-900">Why: </span>
+                        {rec.rationale}
+                      </div>
 
-                {/* Signal Card 5: Competitor Pricing */}
-                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-2xs space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-900 flex items-center gap-2">
-                      <Percent className="w-4 h-4 text-rose-500" />
-                      Competitor Pricing & Promos
-                    </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-50 text-rose-700">
-                      Market Intelligence
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 leading-normal">
-                    Scrapes competitor basket prices and flyer deals to dynamically optimize markdowns and preserve gross margin.
-                  </p>
-                  <div className="p-3 bg-slate-50 rounded-xl space-y-1.5 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Price Index vs Market:</span>
-                      <strong className="text-slate-800">101.2% (Parity)</strong>
+                      <div className="mt-3 text-[11px] text-slate-500">
+                        <span className="font-semibold text-slate-700">Alternatives: </span>
+                        {rec.alternatives_considered}
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Margin Protection:</span>
-                      <strong className="text-emerald-600">31.8% Gross</strong>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Signal Card 6: Intra-Store Balancing */}
-                <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-2xs space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-900 flex items-center gap-2">
-                      <RefreshCw className="w-4 h-4 text-emerald-500" />
-                      District Cross-Dock Balancing
-                    </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700">
-                      Optimization
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 leading-normal">
-                    Identifies surplus in Store A and transfers to near-empty Store B within a 20-mile radius, cutting external supplier lead time.
-                  </p>
-                  <div className="p-3 bg-slate-50 rounded-xl space-y-1.5 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Intra-District Transfers:</span>
-                      <strong className="text-slate-800">180 units today</strong>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Transit Cost vs Saved PO:</span>
-                      <strong className="text-emerald-600">$45 vs $4,200 PO</strong>
+                    <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+                      <span className="text-xs text-slate-400">Status: <b className="capitalize text-slate-700">{rec.status}</b></span>
+                      {rec.status === 'pending' ? (
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => handleDecide(rec.rec_id, 'approved')} className="px-3.5 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold text-xs cursor-pointer">Approve</button>
+                          <button onClick={() => { setSelectedRecForModify(rec); setModifyQty(rec.quantity.toString()); }} className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 text-xs cursor-pointer">Modify</button>
+                          <button onClick={() => handleDecide(rec.rec_id, 'rejected')} className="px-3 py-1.5 rounded-lg border border-slate-200 text-rose-600 text-xs cursor-pointer">Reject</button>
+                        </div>
+                      ) : (
+                        <span className="text-xs font-semibold text-emerald-600">Decision Archived</span>
+                      )}
                     </div>
                   </div>
-                </div>
-
+                ))}
               </div>
-
             </div>
           )}
 
-          {/* ========================================================
-              TAB 3: AGENTIC FLOW (Observe → Predict → Reason → Decide → Act → Measure)
-          ======================================================== */}
-          {activeTab === 'flow' && (
-            <div className="space-y-6 animate-in fade-in duration-200">
-              
-              <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-2xs">
-                <h3 className="text-sm font-bold text-slate-900 mb-1">
-                  The 6-Stage Agentic Intelligence Pipeline
-                </h3>
-                <p className="text-xs text-slate-500 leading-relaxed max-w-3xl">
-                  Traditional solutions stop at sales forecasts. RetailSense connects intelligence into automated decisions 
-                  by reasoning across the enterprise chain and measuring real business impact.
-                </p>
+          {/* TAB 3: INVENTORY RISK BOARD */}
+          {activeTab === 'risk' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Inventory & Risk Board</h2>
+                <p className="text-xs text-slate-500">Real-time cover days, reorder thresholds, and stockout probability per SKU.</p>
               </div>
 
-              {/* Step By Step Interactive Diagram */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                
-                {/* Step 1: Observe */}
-                <div className="bg-white p-5 rounded-2xl border border-indigo-100/80 shadow-2xs relative overflow-hidden">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-indigo-50 text-[#5244E9]">
-                      Stage 01
-                    </span>
-                    <Activity className="w-5 h-5 text-[#5244E9]" />
-                  </div>
-                  <h4 className="text-sm font-bold text-slate-900">Observe</h4>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Continuously ingests POS scanner telemetry, live ERP inventory, local weather, events, and supplier EDI feeds.
-                  </p>
-                  <div className="mt-3 pt-3 border-t border-slate-100 text-[11px] text-slate-400">
-                    Input: 9 Multi-modal Signal Streams
-                  </div>
-                </div>
-
-                {/* Step 2: Predict */}
-                <div className="bg-white p-5 rounded-2xl border border-blue-100/80 shadow-2xs relative overflow-hidden">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600">
-                      Stage 02
-                    </span>
-                    <TrendingUp className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <h4 className="text-sm font-bold text-slate-900">Predict</h4>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Generates probabilistic demand distribution curves per SKU per store, predicting exact stockout horizons.
-                  </p>
-                  <div className="mt-3 pt-3 border-t border-slate-100 text-[11px] text-slate-400">
-                    Horizon: 36h, 7-day, and 30-day confidence bands
-                  </div>
-                </div>
-
-                {/* Step 3: Reason */}
-                <div className="bg-white p-5 rounded-2xl border border-purple-100/80 shadow-2xs relative overflow-hidden">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-purple-50 text-purple-700">
-                      Stage 03
-                    </span>
-                    <Zap className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <h4 className="text-sm font-bold text-slate-900">Reason</h4>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Traverses the enterprise ripple graph: Demand → Inventory → Replenishment → Logistics → Margin → CX.
-                  </p>
-                  <div className="mt-3 pt-3 border-t border-slate-100 text-[11px] text-slate-400">
-                    Engine: Cross-enterprise constraint evaluation
-                  </div>
-                </div>
-
-                {/* Step 4: Decide */}
-                <div className="bg-white p-5 rounded-2xl border border-emerald-100/80 shadow-2xs relative overflow-hidden">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700">
-                      Stage 04
-                    </span>
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <h4 className="text-sm font-bold text-slate-900">Decide</h4>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Recommends exact business action from 7 choices: Replenish, Transfer, Markdown, Allocation, Promotion, Substitute, No Action.
-                  </p>
-                  <div className="mt-3 pt-3 border-t border-slate-100 text-[11px] text-slate-400">
-                    Output: Prescribed action + "Why" rationale
-                  </div>
-                </div>
-
-                {/* Step 5: Act */}
-                <div className="bg-white p-5 rounded-2xl border border-amber-100/80 shadow-2xs relative overflow-hidden">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700">
-                      Stage 05
-                    </span>
-                    <Truck className="w-5 h-5 text-amber-600" />
-                  </div>
-                  <h4 className="text-sm font-bold text-slate-900">Act</h4>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Direct automated dispatch into ERP / WMS or one-click approval by Store Manager or Supply Chain Lead.
-                  </p>
-                  <div className="mt-3 pt-3 border-t border-slate-100 text-[11px] text-slate-400">
-                    Integration: Direct REST/EDI order triggers
-                  </div>
-                </div>
-
-                {/* Step 6: Measure */}
-                <div className="bg-white p-5 rounded-2xl border border-rose-100/80 shadow-2xs relative overflow-hidden">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-rose-50 text-rose-700">
-                      Stage 06
-                    </span>
-                    <BarChart3 className="w-5 h-5 text-rose-600" />
-                  </div>
-                  <h4 className="text-sm font-bold text-slate-900">Measure</h4>
-                  <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                    Tracks performance against baseline: Stockouts avoided, excess capital freed, gross margin expansion, decision accuracy.
-                  </p>
-                  <div className="mt-3 pt-3 border-t border-slate-100 text-[11px] text-slate-400">
-                    Closed-loop: Reinforces agentic reward weights
-                  </div>
-                </div>
-
-              </div>
-
-            </div>
-          )}
-
-          {/* ========================================================
-              TAB 4: AI VS BASELINE ROI COMPARISON
-          ======================================================== */}
-          {activeTab === 'baseline' && (
-            <div className="space-y-6 animate-in fade-in duration-200">
-              
-              <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-2xs">
-                <h3 className="text-sm font-bold text-slate-900 mb-1">
-                  AI Decision Intelligence vs Legacy Statistical Baseline
-                </h3>
-                <p className="text-xs text-slate-500 leading-relaxed max-w-3xl">
-                  {baselineData?.summary || "Direct comparison of RetailSense against traditional statistical forecasting with static reorder points."}
-                </p>
-              </div>
-
-              {/* Head to Head Table */}
-              <div className="bg-white rounded-2xl border border-slate-100 shadow-2xs overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50/75 text-slate-500 font-bold uppercase tracking-wider text-[10px] border-b border-slate-100">
-                      <tr>
-                        <th className="py-3.5 px-5">Enterprise Metric</th>
-                        <th className="py-3.5 px-5">Legacy Baseline (ARIMA / Min-Max)</th>
-                        <th className="py-3.5 px-5 bg-indigo-50/40 text-[#5244E9]">RetailSense Agentic AI</th>
-                        <th className="py-3.5 px-5">Measured Improvement</th>
-                        <th className="py-3.5 px-5">Why AI Wins</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 text-slate-700">
-                      {baselineData?.metrics.map((m, idx) => (
-                        <tr key={idx} className="hover:bg-slate-50/50">
-                          <td className="py-4 px-5 font-bold text-slate-900">{m.metric_name}</td>
-                          <td className="py-4 px-5 text-slate-500 font-medium">{m.baseline_value}</td>
-                          <td className="py-4 px-5 font-bold text-[#5244E9] bg-indigo-50/20">{m.ai_value}</td>
-                          <td className="py-4 px-5 font-bold text-emerald-600">{m.improvement}</td>
-                          <td className="py-4 px-5 text-slate-500 leading-normal max-w-xs">{m.description}</td>
+              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#FAFAFC] text-slate-500 font-semibold uppercase tracking-wider border-b border-slate-200">
+                    <tr>
+                      <th className="py-3 px-4">SKU & Item</th>
+                      <th className="py-3 px-4">On Hand</th>
+                      <th className="py-3 px-4">Daily Demand</th>
+                      <th className="py-3 px-4">Supplier Lead Time</th>
+                      <th className="py-3 px-4">Days of Cover</th>
+                      <th className="py-3 px-4">Reorder Point</th>
+                      <th className="py-3 px-4">Risk Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {riskBoard.map(item => {
+                      const isCritical = item.days_of_cover <= item.lead_time_days;
+                      const isExcess = item.days_of_cover > 30;
+                      return (
+                        <tr key={item.product_id} className="hover:bg-slate-50/60">
+                          <td className="py-3.5 px-4 font-bold text-slate-900">
+                            {item.name}
+                            <div className="text-[10px] text-slate-400 font-normal">{item.sku} • {item.supplier}</div>
+                          </td>
+                          <td className="py-3.5 px-4 font-semibold text-slate-800">{item.on_hand} units</td>
+                          <td className="py-3.5 px-4 text-slate-600">{item.daily_demand} / day</td>
+                          <td className="py-3.5 px-4 text-slate-600">{item.lead_time_days} days</td>
+                          <td className="py-3.5 px-4 font-bold">
+                            <span className={`px-2 py-0.5 rounded ${isCritical ? 'bg-rose-100 text-rose-800' : (isExcess ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800')}`}>
+                              {item.days_of_cover} days
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-slate-700 font-mono">{item.reorder_point}</td>
+                          <td className="py-3.5 px-4">
+                            <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${
+                              isCritical ? 'bg-rose-50 text-rose-700 border border-rose-200' : 
+                              (isExcess ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200')
+                            }`}>
+                              {item.risk_type}
+                            </span>
+                          </td>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: DEMAND FORECASTS */}
+          {activeTab === 'forecast' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Probabilistic Demand Forecasts (P10 - P90)</h2>
+                <p className="text-xs text-slate-500">Forecasting daily demand over the lead-time plus review horizon with festival and weather uplifts.</p>
+              </div>
+
+              <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs">
+                <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+                  <div>
+                    <h3 className="font-bold text-slate-900">SKU-4412: Royal Basmati Rice 5kg</h3>
+                    <div className="text-xs text-[#2563EB] font-medium">Uplift: Festival Gala (+35%), Rainy Season (+8%)</div>
+                  </div>
+                  <span className="px-3 py-1 bg-[#EEF4FF] text-[#2563EB] rounded-full text-xs font-semibold">
+                    Ensemble Boosted
+                  </span>
+                </div>
+
+                <div className="h-[320px]">
+                  <PlotlyChart
+                    data={[
+                      { x: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7', 'Day 8', 'Day 9', 'Day 10', 'Day 11', 'Day 12', 'Day 13', 'Day 14'], y: [12, 14, 15, 17, 18, 22, 25, 27, 24, 21, 19, 18, 17, 16], name: 'P10 (Pessimistic)', type: 'scatter', mode: 'lines', line: { color: '#93c5fd', width: 1.5, dash: 'dot' } },
+                      { x: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7', 'Day 8', 'Day 9', 'Day 10', 'Day 11', 'Day 12', 'Day 13', 'Day 14'], y: [18, 20, 22, 25, 27, 34, 38, 40, 36, 31, 28, 26, 24, 23], name: 'P50 (Expected Demand)', type: 'scatter', mode: 'lines+markers', line: { color: '#2563EB', width: 3 } },
+                      { x: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7', 'Day 8', 'Day 9', 'Day 10', 'Day 11', 'Day 12', 'Day 13', 'Day 14'], y: [24, 28, 30, 35, 39, 48, 54, 58, 51, 45, 40, 37, 34, 32], name: 'P90 (Surge Peak)', type: 'scatter', mode: 'lines', line: { color: '#1D4ED8', width: 1.5, dash: 'dot' } }
+                    ]}
+                    layout={{
+                      legend: { orientation: 'h', y: -0.2, x: 0.25 },
+                      yaxis: { title: 'Units / Day', gridcolor: '#f8fafc' },
+                      xaxis: { gridcolor: '#f8fafc' }
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: BACKTEST PROOF */}
+          {activeTab === 'backtest' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900">Holdout Backtest: AI Policy vs Simple Baseline</h2>
+                  <p className="text-xs text-slate-500">Day-by-day replay over the last 6 holdout weeks comparing stockouts, excess inventory, service level, and gross margin.</p>
+                </div>
+                <div className="px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <span>Verified ROI: 4.8x Multiple</span>
                 </div>
               </div>
 
-              {/* Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/40 p-5 rounded-2xl border border-emerald-200/80">
-                  <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider">Total Stockouts Averted</span>
-                  <div className="text-3xl font-[800] text-emerald-900 mt-1">3,420</div>
-                  <p className="text-xs text-emerald-700 mt-1">Zero shelf outages during high-demand events</p>
-                </div>
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100/40 p-5 rounded-2xl border border-blue-200/80">
-                  <span className="text-[11px] font-bold text-blue-700 uppercase tracking-wider">Working Capital Freed</span>
-                  <div className="text-3xl font-[800] text-blue-900 mt-1">$340,000</div>
-                  <p className="text-xs text-blue-700 mt-1">Eliminated idle warehouse inventory</p>
-                </div>
-                <div className="bg-gradient-to-br from-indigo-50 to-indigo-100/40 p-5 rounded-2xl border border-indigo-200/80">
-                  <span className="text-[11px] font-bold text-indigo-700 uppercase tracking-wider">Gross Margin Expansion</span>
-                  <div className="text-3xl font-[800] text-[#5244E9] mt-1">+5.4 pts</div>
-                  <p className="text-xs text-indigo-700 mt-1">Protected full-price selling with targeted markdowns</p>
-                </div>
+              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#FAFAFC] text-slate-500 font-semibold uppercase tracking-wider border-b border-slate-200">
+                    <tr>
+                      <th className="py-3.5 px-4">Metric</th>
+                      <th className="py-3.5 px-4">Simple Baseline Policy</th>
+                      <th className="py-3.5 px-4">PulseRetail AI Policy</th>
+                      <th className="py-3.5 px-4">Improvement</th>
+                      <th className="py-3.5 px-4">Business Realization</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-medium">
+                    {backtest?.comparison?.map((row, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50/70">
+                        <td className="py-3.5 px-4 font-bold text-slate-900">{row.metric}</td>
+                        <td className="py-3.5 px-4 text-rose-700">{row.baseline}</td>
+                        <td className="py-3.5 px-4 font-bold text-emerald-700">{row.ai}</td>
+                        <td className="py-3.5 px-4">
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[11px]">
+                            {row.change}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-slate-600">{row.impact}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
 
+              <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs">
+                <h3 className="font-bold text-slate-900 text-sm mb-4">Stockout Rate Trajectory: Baseline vs AI</h3>
+                <div className="h-[280px]">
+                  <PlotlyChart
+                    data={backtestChartData}
+                    layout={{
+                      legend: { orientation: 'h', y: -0.2, x: 0.3 },
+                      yaxis: { title: 'Stockout Rate %', gridcolor: '#f8fafc' },
+                      xaxis: { gridcolor: '#f8fafc' }
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 6: STAFF TO-DO */}
+          {activeTab === 'staff_todo' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Store Staff Daily Execution Checklist</h2>
+                <p className="text-xs text-slate-500">Simplified, actionable instructions for physical store operations team members.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-start justify-between gap-4">
+                  <div>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 uppercase">
+                      Price Tag Update
+                    </span>
+                    <h3 className="text-sm font-bold text-slate-900 mt-2">Print & Apply 25% Markdown on Cadbury Celebration 500g</h3>
+                    <p className="text-xs text-slate-600 mt-1">
+                      New Price: <b>₹240.00</b> (Old Price: ₹320.00). Place on promo endcap before expiry in 22 days.
+                    </p>
+                  </div>
+                  <button onClick={() => showToast("✅ Cadbury price update marked complete!")} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold whitespace-nowrap shadow-xs cursor-pointer">
+                    Mark Done
+                  </button>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex items-start justify-between gap-4">
+                  <div>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-800 border border-purple-200 uppercase">
+                      Shelf Cross-Merchandise
+                    </span>
+                    <h3 className="text-sm font-bold text-slate-900 mt-2">Move 40 Units of Filter Coffee to Front Endcap</h3>
+                    <p className="text-xs text-slate-600 mt-1">
+                      Primary Gourmet Arabica blend is delayed. Cross-positioning filter coffee recovers 70% of displaced shopper demand.
+                    </p>
+                  </div>
+                  <button onClick={() => showToast("✅ Coffee endcap placement verified!")} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold whitespace-nowrap shadow-xs cursor-pointer">
+                    Mark Done
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 7: WHATSAPP BOT SIMULATOR */}
+          {activeTab === 'whatsapp' && (
+            <div className="max-w-2xl mx-auto space-y-6">
+              <div className="text-center">
+                <h2 className="text-xl font-bold text-slate-900">Interactive WhatsApp Bot Simulator</h2>
+                <p className="text-xs text-slate-500">Test two-way conversational decision intelligence and 1-tap approvals in real-time.</p>
+              </div>
+
+              <div className="rounded-[32px] bg-slate-900 p-3 shadow-2xl border-4 border-slate-800">
+                <div className="bg-[#075E54] text-white p-3.5 rounded-t-2xl flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-emerald-400 text-slate-900 font-bold flex items-center justify-center text-xs shadow-inner">
+                      PR
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold leading-tight">PulseRetail Store Assistant</div>
+                      <div className="text-[10px] text-emerald-200">Online • AI Decision Agent</div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] bg-emerald-800/80 px-2 py-0.5 rounded text-white font-mono">
+                    +91 98450 00101
+                  </span>
+                </div>
+
+                <div className="bg-[#ECE5DD] p-4 space-y-3 min-h-[360px] max-h-[440px] overflow-y-auto text-xs">
+                  {chatMessages.map(msg => (
+                    <div key={msg.id} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
+                      <div className={`p-3 rounded-2xl shadow-sm max-w-[85%] ${
+                        msg.sender === 'user' ? 'bg-[#DCF8C6] text-slate-800' : 'bg-white text-slate-800 border border-slate-200'
+                      }`}>
+                        <div className="whitespace-pre-line text-[11px] leading-relaxed">
+                          {msg.text}
+                        </div>
+
+                        {msg.has_actions && (
+                          <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center gap-2">
+                            <button
+                              onClick={() => handleDecide(1, 'approved')}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-1 rounded-md text-[11px] shadow-sm transition-all cursor-pointer"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => handleDecide(1, 'rejected')}
+                              className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3 py-1 rounded-md text-[11px] transition-all cursor-pointer"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        )}
+
+                        <div className="text-[9px] text-slate-400 text-right mt-1 font-mono">
+                          {msg.timestamp}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <form onSubmit={handleSendChatMessage} className="bg-slate-100 p-2.5 rounded-b-2xl flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder="Ask 'Which items will run out this week?' or 'Approve'..."
+                    className="flex-1 text-xs px-4 py-2.5 rounded-full border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                  />
+                  <button
+                    type="submit"
+                    className="w-9 h-9 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center shadow-md transition-all cursor-pointer"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 8: DATA QUALITY */}
+          {activeTab === 'quality' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Data Quality & Lost Demand Recovery Audit</h2>
+                <p className="text-xs text-slate-500">Every dirty POS anomaly is explicitly captured in the audit ledger and unobserved lost sales reconstructed.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {dataIssues.map(issue => (
+                  <div key={issue.issue_id} className="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                          issue.severity === 'critical' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
+                        }`}>
+                          {issue.severity}
+                        </span>
+                        <span className="text-xs text-slate-400">{issue.sku}</span>
+                      </div>
+                      <h3 className="text-base font-bold text-slate-900 mt-3">{issue.name}</h3>
+                      <div className="text-xs font-semibold text-[#2563EB] mt-1 uppercase">{issue.issue_type}</div>
+                      <p className="text-xs text-slate-600 mt-3 leading-relaxed">{issue.details}</p>
+                    </div>
+                    <div className="mt-6 pt-3 border-t border-slate-100 text-[11px] text-slate-400">
+                      Rule enforced: Never silently fix dirty data.
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
@@ -1470,100 +1358,54 @@ export default function Dashboard({
 
       </div>
 
-      {/* ========================================================
-          DECISION DETAIL MODAL (Inspect Connected Chain)
-      ======================================================== */}
-      {selectedDecisionDetail && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-2xl w-full p-6 sm:p-7 relative overflow-hidden max-h-[90vh] overflow-y-auto">
-            
-            <div className="flex items-start justify-between pb-4 border-b border-slate-100">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10.5px] font-bold border ${getActionBadgeClass(selectedDecisionDetail.recommended_action)}`}>
-                    Action: {selectedDecisionDetail.recommended_action.toUpperCase()}
-                  </span>
-                  {getUrgencyBadge(selectedDecisionDetail.urgency)}
-                </div>
-                <h3 className="text-lg font-[800] text-slate-900">
-                  {selectedDecisionDetail.sku_name}
-                </h3>
-                <p className="text-xs text-slate-500">
-                  {selectedDecisionDetail.store_name} • {selectedDecisionDetail.channel}
-                </p>
-              </div>
-
-              <button
-                onClick={() => setSelectedDecisionDetail(null)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-              >
-                <X className="w-5 h-5" />
+      {/* MODAL: MODIFY ACTION */}
+      {selectedRecForModify && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900">Modify Recommendation #{selectedRecForModify.rec_id}</h3>
+              <button onClick={() => setSelectedRecForModify(null)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Connected Decision Chain: Demand → CX */}
-            <div className="mt-5 space-y-4">
-              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                Connected Decision Chain Analysis
-              </h4>
-
-              <div className="space-y-2.5">
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs">
-                  <strong className="text-[#5244E9]">1. Demand: </strong>
-                  <span className="text-slate-700">{selectedDecisionDetail.chain_impact.demand}</span>
-                </div>
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs">
-                  <strong className="text-blue-600">2. Inventory: </strong>
-                  <span className="text-slate-700">{selectedDecisionDetail.chain_impact.inventory}</span>
-                </div>
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs">
-                  <strong className="text-purple-600">3. Replenishment: </strong>
-                  <span className="text-slate-700">{selectedDecisionDetail.chain_impact.replenishment}</span>
-                </div>
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs">
-                  <strong className="text-amber-600">4. Logistics: </strong>
-                  <span className="text-slate-700">{selectedDecisionDetail.chain_impact.logistics}</span>
-                </div>
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs">
-                  <strong className="text-emerald-600">5. Margin: </strong>
-                  <span className="text-slate-700">{selectedDecisionDetail.chain_impact.margin}</span>
-                </div>
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs">
-                  <strong className="text-rose-600">6. Customer Experience: </strong>
-                  <span className="text-slate-700">{selectedDecisionDetail.chain_impact.customer_experience}</span>
-                </div>
+            <div className="mt-4 space-y-4 text-xs">
+              <div>
+                <span className="text-slate-500">Item:</span>
+                <div className="font-bold text-slate-900 text-sm mt-0.5">{selectedRecForModify.name}</div>
               </div>
-
-              {/* Rationale & Impact */}
-              <div className="p-4 bg-indigo-50/70 border border-indigo-100 rounded-2xl text-xs space-y-2">
-                <div className="font-bold text-[#5244E9]">Prescription Rationale</div>
-                <p className="text-slate-700 leading-relaxed">{selectedDecisionDetail.rationale}</p>
-                <div className="font-bold text-emerald-700 pt-1">Expected Financial Impact</div>
-                <p className="text-emerald-800 font-medium">{selectedDecisionDetail.expected_impact}</p>
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Adjust Quantity (Units)</label>
+                <input
+                  type="number"
+                  value={modifyQty}
+                  onChange={(e) => setModifyQty(e.target.value)}
+                  className="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#2563EB]"
+                />
               </div>
-
-              {/* CTA */}
-              <div className="pt-2 flex items-center justify-end gap-2.5">
-                <button
-                  onClick={() => setSelectedDecisionDetail(null)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
-                >
-                  Close
-                </button>
-                {selectedDecisionDetail.status !== 'executed' && (
-                  <button
-                    onClick={() => {
-                      handleExecuteAction(selectedDecisionDetail);
-                      setSelectedDecisionDetail(null);
-                    }}
-                    className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#5244E9] hover:bg-[#4333DE] shadow-xs transition-all"
-                  >
-                    Confirm & Execute Action
-                  </button>
-                )}
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Reason for Modification</label>
+                <textarea
+                  rows={2}
+                  value={modifyReason}
+                  onChange={(e) => setModifyReason(e.target.value)}
+                  placeholder="e.g., Supplier MOQ constraints or extra warehouse space..."
+                  className="w-full text-xs px-3.5 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#2563EB]"
+                />
               </div>
             </div>
 
+            <div className="mt-6 flex items-center justify-end gap-2">
+              <button onClick={() => setSelectedRecForModify(null)} className="px-3 py-2 rounded-lg text-slate-600 text-xs font-semibold hover:bg-slate-100">
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDecide(selectedRecForModify.rec_id, 'modified', parseInt(modifyQty) || selectedRecForModify.quantity, modifyReason)}
+                className="px-4 py-2 rounded-lg bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-semibold shadow-sm"
+              >
+                Save & Dispatch Order
+              </button>
+            </div>
           </div>
         </div>
       )}

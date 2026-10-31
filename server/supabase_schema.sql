@@ -1,0 +1,426 @@
+-- ============================================================================
+-- AUTONOMOUS RETAIL DECISION INTELLIGENCE (Challenge 10 / Theme 2)
+-- Complete 6-Zone Relational Database Schema for Supabase (PostgreSQL)
+-- ============================================================================
+
+-- Enable UUID extension if needed
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ============================================================================
+-- ZONE 1: MASTER DATA
+-- ============================================================================
+
+-- Store table (Single store architecture with foreign key for future multi-store scaling)
+CREATE TABLE IF NOT EXISTS store (
+    store_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    lat NUMERIC(9, 6),
+    lon NUMERIC(9, 6),
+    city VARCHAR(100) NOT NULL,
+    currency VARCHAR(10) DEFAULT 'USD',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Store operational guardrails and targets
+CREATE TABLE IF NOT EXISTS shop_settings (
+    setting_id SERIAL PRIMARY KEY,
+    store_id INT REFERENCES store(store_id) ON DELETE CASCADE,
+    service_level_target NUMERIC(5, 2) DEFAULT 95.00, -- e.g. 95%
+    max_markdown_pct NUMERIC(5, 2) DEFAULT 40.00,    -- Guardrail: max discount allowed
+    min_margin_pct NUMERIC(5, 2) DEFAULT 12.00,      -- Guardrail: minimum gross margin
+    target_cover_days NUMERIC(5, 2) DEFAULT 14.00,   -- Desired inventory buffer in days
+    auto_approve_enabled BOOLEAN DEFAULT FALSE,
+    quiet_start TIME DEFAULT '22:00:00',
+    quiet_end TIME DEFAULT '07:00:00',
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Product categories with shelf-life and price elasticity characteristics
+CREATE TABLE IF NOT EXISTS category (
+    category_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    default_shelf_life_days INT,
+    default_elasticity NUMERIC(5, 2) DEFAULT -1.50
+);
+
+-- Suppliers and lead time reliability
+CREATE TABLE IF NOT EXISTS supplier (
+    supplier_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    phone VARCHAR(50),
+    email VARCHAR(255),
+    reliability_score NUMERIC(5, 2) DEFAULT 95.00 -- Percentage of on-time in-full deliveries
+);
+
+-- Product Master
+CREATE TABLE IF NOT EXISTS product (
+    product_id SERIAL PRIMARY KEY,
+    sku VARCHAR(64) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    category_id INT REFERENCES category(category_id) ON DELETE SET NULL,
+    brand VARCHAR(100),
+    unit_cost NUMERIC(12, 2) NOT NULL,
+    list_price NUMERIC(12, 2) NOT NULL,
+    shelf_life_days INT DEFAULT 365,
+    is_active BOOLEAN DEFAULT TRUE,
+    image_url VARCHAR(500),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Supplier SKU mapping with lead times & MOQ
+CREATE TABLE IF NOT EXISTS product_supplier (
+    product_id INT REFERENCES product(product_id) ON DELETE CASCADE,
+    supplier_id INT REFERENCES supplier(supplier_id) ON DELETE CASCADE,
+    lead_time_mean_days NUMERIC(5, 1) NOT NULL,
+    lead_time_std_days NUMERIC(5, 1) DEFAULT 1.0,
+    moq INT NOT NULL DEFAULT 10,             -- Minimum Order Quantity
+    pack_size INT NOT NULL DEFAULT 1,
+    unit_cost NUMERIC(12, 2) NOT NULL,
+    PRIMARY KEY (product_id, supplier_id)
+);
+
+-- Substitute products for out-of-stock mitigation
+CREATE TABLE IF NOT EXISTS product_substitute (
+    product_id INT REFERENCES product(product_id) ON DELETE CASCADE,
+    substitute_product_id INT REFERENCES product(product_id) ON DELETE CASCADE,
+    similarity_score NUMERIC(5, 2) NOT NULL, -- 0.00 to 1.00
+    PRIMARY KEY (product_id, substitute_product_id)
+);
+
+-- ============================================================================
+-- ZONE 2: DAILY OPERATIONS
+-- ============================================================================
+
+-- Daily Sales (Historic demand)
+CREATE TABLE IF NOT EXISTS sales_daily (
+    sales_id SERIAL PRIMARY KEY,
+    store_id INT REFERENCES store(store_id) ON DELETE CASCADE,
+    product_id INT REFERENCES product(product_id) ON DELETE CASCADE,
+    sale_date DATE NOT NULL,
+    units INT NOT NULL DEFAULT 0,
+    revenue NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
+    avg_price NUMERIC(12, 2) NOT NULL,
+    discount_amount NUMERIC(12, 2) DEFAULT 0.00,
+    is_stockout_day BOOLEAN DEFAULT FALSE,  -- True if zero stock caused lost sales
+    estimated_lost_units INT DEFAULT 0,     -- Reconstructed true unconstrained demand
+    CONSTRAINT unique_store_product_saledate UNIQUE(store_id, product_id, sale_date)
+);
+
+-- Daily Inventory Snapshots
+CREATE TABLE IF NOT EXISTS inventory_snapshot (
+    snapshot_id SERIAL PRIMARY KEY,
+    store_id INT REFERENCES store(store_id) ON DELETE CASCADE,
+    product_id INT REFERENCES product(product_id) ON DELETE CASCADE,
+    snapshot_date DATE NOT NULL,
+    on_hand INT NOT NULL DEFAULT 0,
+    on_order INT NOT NULL DEFAULT 0,
+    expiry_date DATE,
+    CONSTRAINT unique_store_product_snapshotdate UNIQUE(store_id, product_id, snapshot_date)
+);
+
+-- Purchase Orders (Generated by approved Replenish decisions)
+CREATE TABLE IF NOT EXISTS purchase_order (
+    po_id SERIAL PRIMARY KEY,
+    supplier_id INT REFERENCES supplier(supplier_id) ON DELETE SET NULL,
+    status VARCHAR(50) DEFAULT 'draft', -- draft, placed, in_transit, received, cancelled
+    ordered_at TIMESTAMPTZ,
+    expected_at TIMESTAMPTZ,
+    received_at TIMESTAMPTZ,
+    recommendation_id INT -- Link to recommendation that triggered this PO
+);
+
+CREATE TABLE IF NOT EXISTS purchase_order_line (
+    line_id SERIAL PRIMARY KEY,
+    po_id INT REFERENCES purchase_order(po_id) ON DELETE CASCADE,
+    product_id INT REFERENCES product(product_id) ON DELETE CASCADE,
+    qty_ordered INT NOT NULL,
+    qty_received INT DEFAULT 0,
+    unit_cost NUMERIC(12, 2) NOT NULL
+);
+
+-- Price History for markdown audits
+CREATE TABLE IF NOT EXISTS price_history (
+    price_id SERIAL PRIMARY KEY,
+    product_id INT REFERENCES product(product_id) ON DELETE CASCADE,
+    price NUMERIC(12, 2) NOT NULL,
+    effective_from TIMESTAMPTZ NOT NULL,
+    effective_to TIMESTAMPTZ,
+    reason VARCHAR(255)
+);
+
+-- ============================================================================
+-- ZONE 3: BUSINESS CONTEXT (Promotions, Events, Weather, Competitors)
+-- ============================================================================
+
+-- Promotions
+CREATE TABLE IF NOT EXISTS promotion (
+    promo_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    promo_type VARCHAR(50) DEFAULT 'discount', -- discount, bogo, bundle
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    discount_pct NUMERIC(5, 2) DEFAULT 0.00,
+    status VARCHAR(50) DEFAULT 'active'
+);
+
+CREATE TABLE IF NOT EXISTS promotion_product (
+    promo_id INT REFERENCES promotion(promo_id) ON DELETE CASCADE,
+    product_id INT REFERENCES product(product_id) ON DELETE CASCADE,
+    PRIMARY KEY (promo_id, product_id)
+);
+
+-- Calendar & Local Events (Festivals, sports, holidays)
+CREATE TABLE IF NOT EXISTS event (
+    event_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    event_type VARCHAR(50) DEFAULT 'festival',
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    expected_uplift_pct NUMERIC(5, 2) DEFAULT 25.00,
+    category_id INT REFERENCES category(category_id) ON DELETE SET NULL
+);
+
+-- Weather data (historical & forecast)
+CREATE TABLE IF NOT EXISTS weather_daily (
+    weather_id SERIAL PRIMARY KEY,
+    store_id INT REFERENCES store(store_id) ON DELETE CASCADE,
+    weather_date DATE NOT NULL,
+    temp_max NUMERIC(5, 1),
+    rain_mm NUMERIC(5, 1) DEFAULT 0.0,
+    is_forecast BOOLEAN DEFAULT FALSE,
+    summary VARCHAR(100),
+    CONSTRAINT unique_store_weather_date UNIQUE(store_id, weather_date)
+);
+
+-- Competitors
+CREATE TABLE IF NOT EXISTS competitor (
+    competitor_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    distance_km NUMERIC(5, 2)
+);
+
+CREATE TABLE IF NOT EXISTS competitor_price (
+    cp_id SERIAL PRIMARY KEY,
+    competitor_id INT REFERENCES competitor(competitor_id) ON DELETE CASCADE,
+    product_id INT REFERENCES product(product_id) ON DELETE CASCADE,
+    price NUMERIC(12, 2) NOT NULL,
+    captured_on TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================================
+-- ZONE 4: AI ENGINE OUTPUTS (Run Traceability & Decisions)
+-- ============================================================================
+
+-- Pipeline Execution Trace
+CREATE TABLE IF NOT EXISTS pipeline_run (
+    run_id VARCHAR(64) PRIMARY KEY, -- e.g. run_20261031_080000
+    started_at TIMESTAMPTZ DEFAULT NOW(),
+    finished_at TIMESTAMPTZ,
+    status VARCHAR(50) DEFAULT 'running', -- running, completed, failed
+    engine_version VARCHAR(50) DEFAULT 'v2.4.0-cpg',
+    params JSONB DEFAULT '{}'::jsonb,
+    triggered_by VARCHAR(100) DEFAULT 'system_scheduler'
+);
+
+-- Data Quality Issues (Never silently fix dirty data)
+CREATE TABLE IF NOT EXISTS data_quality_issue (
+    issue_id SERIAL PRIMARY KEY,
+    run_id VARCHAR(64) REFERENCES pipeline_run(run_id) ON DELETE CASCADE,
+    product_id INT REFERENCES product(product_id) ON DELETE SET NULL,
+    issue_type VARCHAR(100) NOT NULL, -- negative_stock, zero_stock_lost_demand, missing_days, invalid_price
+    severity VARCHAR(20) DEFAULT 'warning', -- info, warning, critical
+    details TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Probabilistic Demand Forecasts (P10, P50, P90)
+CREATE TABLE IF NOT EXISTS forecast (
+    forecast_id SERIAL PRIMARY KEY,
+    run_id VARCHAR(64) REFERENCES pipeline_run(run_id) ON DELETE CASCADE,
+    store_id INT REFERENCES store(store_id) ON DELETE CASCADE,
+    product_id INT REFERENCES product(product_id) ON DELETE CASCADE,
+    forecast_date DATE NOT NULL,
+    p10 NUMERIC(10, 2) NOT NULL,
+    p50 NUMERIC(10, 2) NOT NULL,
+    p90 NUMERIC(10, 2) NOT NULL,
+    method VARCHAR(50) DEFAULT 'ensemble_boosted',
+    uplift_factors JSONB DEFAULT '{}'::jsonb -- breakdown of promo uplift, festival uplift, weather uplift
+);
+
+-- Stockout & Excess Risk Scoring
+CREATE TABLE IF NOT EXISTS risk_score (
+    risk_id SERIAL PRIMARY KEY,
+    run_id VARCHAR(64) REFERENCES pipeline_run(run_id) ON DELETE CASCADE,
+    store_id INT REFERENCES store(store_id) ON DELETE CASCADE,
+    product_id INT REFERENCES product(product_id) ON DELETE CASCADE,
+    risk_type VARCHAR(50) NOT NULL, -- stockout, excess, expiry_risk
+    days_of_cover NUMERIC(6, 2) NOT NULL,
+    stockout_prob NUMERIC(5, 2) NOT NULL, -- 0.00 to 100.00 %
+    expected_stockout_date DATE,
+    excess_units INT DEFAULT 0,
+    excess_value NUMERIC(12, 2) DEFAULT 0.00,
+    money_at_stake NUMERIC(12, 2) NOT NULL
+);
+
+-- AI Recommendations (Action, Quantity, Rationale, Guardrails)
+CREATE TABLE IF NOT EXISTS recommendation (
+    rec_id SERIAL PRIMARY KEY,
+    run_id VARCHAR(64) REFERENCES pipeline_run(run_id) ON DELETE CASCADE,
+    risk_id INT REFERENCES risk_score(risk_id) ON DELETE SET NULL,
+    store_id INT REFERENCES store(store_id) ON DELETE CASCADE,
+    product_id INT REFERENCES product(product_id) ON DELETE CASCADE,
+    action_type VARCHAR(50) NOT NULL, -- replenish, markdown, adjust_promotion, substitute, no_action, transfer (disabled single store)
+    quantity INT NOT NULL DEFAULT 0,
+    params JSONB DEFAULT '{}'::jsonb, -- e.g. {"by_day": "Tuesday", "markdown_pct": 15, "order_cost": 4500}
+    expected_value NUMERIC(12, 2) NOT NULL, -- Money saved or sales protected
+    confidence VARCHAR(20) DEFAULT 'high',  -- high, medium, low
+    needs_review BOOLEAN DEFAULT FALSE,
+    rationale TEXT NOT NULL,                -- LLM plain-language explanation of numbers
+    status VARCHAR(50) DEFAULT 'pending',   -- pending, approved, modified, rejected, executed
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    expires_at TIMESTAMPTZ
+);
+
+-- Alternative Actions Evaluated (Decision traceability)
+CREATE TABLE IF NOT EXISTS recommendation_alternative (
+    alt_id SERIAL PRIMARY KEY,
+    rec_id INT REFERENCES recommendation(rec_id) ON DELETE CASCADE,
+    action_type VARCHAR(50) NOT NULL,
+    quantity INT DEFAULT 0,
+    expected_value NUMERIC(12, 2) DEFAULT 0.00,
+    rejected_reason TEXT NOT NULL
+);
+
+-- ============================================================================
+-- ZONE 5: HUMANS, EXECUTION AND MEASUREMENT
+-- ============================================================================
+
+-- App Users & Roles
+CREATE TABLE IF NOT EXISTS app_user (
+    user_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    role VARCHAR(50) NOT NULL, -- owner, manager, staff, viewer
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Human Decisions (Immutable choice audit)
+CREATE TABLE IF NOT EXISTS decision (
+    decision_id SERIAL PRIMARY KEY,
+    rec_id INT REFERENCES recommendation(rec_id) ON DELETE CASCADE,
+    user_id INT REFERENCES app_user(user_id) ON DELETE SET NULL,
+    decision VARCHAR(50) NOT NULL, -- approve, reject, modify
+    edited_quantity INT,
+    edited_params JSONB,
+    reason TEXT,
+    channel VARCHAR(50) DEFAULT 'web', -- web, whatsapp
+    decided_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Action Orders (Execution artifacts generated from approved decisions)
+CREATE TABLE IF NOT EXISTS action_order (
+    order_id SERIAL PRIMARY KEY,
+    rec_id INT REFERENCES recommendation(rec_id) ON DELETE SET NULL,
+    decision_id INT REFERENCES decision(decision_id) ON DELETE SET NULL,
+    order_type VARCHAR(50) NOT NULL, -- purchase_order, price_tag_update, promo_adjustment, substitute_placement
+    payload JSONB NOT NULL,
+    status VARCHAR(50) DEFAULT 'completed', -- pending, completed, cancelled
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    executed_at TIMESTAMPTZ,
+    executed_by INT REFERENCES app_user(user_id)
+);
+
+-- Financial Impact Ledger
+CREATE TABLE IF NOT EXISTS impact_ledger (
+    ledger_id SERIAL PRIMARY KEY,
+    order_id INT REFERENCES action_order(order_id) ON DELETE CASCADE,
+    expected_value NUMERIC(12, 2) NOT NULL,
+    actual_value NUMERIC(12, 2),
+    measured_from DATE,
+    measured_to DATE
+);
+
+-- Backtest / Simulation Replay Runs (Comparing AI vs Baseline)
+CREATE TABLE IF NOT EXISTS replay_run (
+    replay_id SERIAL PRIMARY KEY,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    seed INT DEFAULT 42,
+    status VARCHAR(50) DEFAULT 'completed',
+    summary JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- KPI Snapshots comparing AI policy vs Simple Baseline
+CREATE TABLE IF NOT EXISTS kpi_snapshot (
+    kpi_id SERIAL PRIMARY KEY,
+    snapshot_date DATE NOT NULL,
+    policy VARCHAR(50) NOT NULL, -- ai, baseline
+    replay_id INT REFERENCES replay_run(replay_id) ON DELETE CASCADE,
+    stockout_rate NUMERIC(5, 2) NOT NULL,
+    service_level NUMERIC(5, 2) NOT NULL,
+    excess_value NUMERIC(12, 2) NOT NULL,
+    revenue NUMERIC(12, 2) NOT NULL,
+    gross_margin NUMERIC(12, 2) NOT NULL,
+    holding_cost NUMERIC(12, 2) NOT NULL
+);
+
+-- ============================================================================
+-- ZONE 6: WHATSAPP INTEGRATION & AUDIT
+-- ============================================================================
+
+-- WhatsApp verified phone link
+CREATE TABLE IF NOT EXISTS whatsapp_link (
+    link_id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES app_user(user_id) ON DELETE CASCADE UNIQUE,
+    phone_hash VARCHAR(128) NOT NULL, -- Sha256 of verified phone number for privacy
+    phone_display VARCHAR(30),       -- Masked e.g. +91 98*** **210
+    verified_at TIMESTAMPTZ DEFAULT NOW(),
+    opted_in BOOLEAN DEFAULT TRUE
+);
+
+-- WhatsApp Message History
+CREATE TABLE IF NOT EXISTS whatsapp_message (
+    msg_id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES app_user(user_id) ON DELETE SET NULL,
+    direction VARCHAR(20) NOT NULL,  -- inbound, outbound
+    body TEXT NOT NULL,
+    intent VARCHAR(100),            -- ask_stockout, approve_action, modify_action, reject_action, daily_digest
+    linked_rec_id INT REFERENCES recommendation(rec_id) ON DELETE SET NULL,
+    wa_message_id VARCHAR(100) UNIQUE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Notification log
+CREATE TABLE IF NOT EXISTS notification (
+    notif_id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES app_user(user_id) ON DELETE SET NULL,
+    rec_id INT REFERENCES recommendation(rec_id) ON DELETE SET NULL,
+    channel VARCHAR(50) DEFAULT 'whatsapp',
+    template_name VARCHAR(100),
+    status VARCHAR(50) DEFAULT 'sent',
+    sent_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Append-only Audit Log
+CREATE TABLE IF NOT EXISTS audit_log (
+    audit_id SERIAL PRIMARY KEY,
+    actor_user_id INT REFERENCES app_user(user_id) ON DELETE SET NULL,
+    action VARCHAR(100) NOT NULL,
+    entity_type VARCHAR(100) NOT NULL,
+    entity_id VARCHAR(100) NOT NULL,
+    before JSONB,
+    after JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================================
+-- INDEXES FOR HIGH-PERFORMANCE ANALYTICS
+-- ============================================================================
+CREATE INDEX IF NOT EXISTS idx_sales_lookup ON sales_daily(store_id, product_id, sale_date);
+CREATE INDEX IF NOT EXISTS idx_inventory_lookup ON inventory_snapshot(store_id, product_id, snapshot_date);
+CREATE INDEX IF NOT EXISTS idx_forecast_lookup ON forecast(store_id, product_id, forecast_date);
+CREATE INDEX IF NOT EXISTS idx_recommendation_status ON recommendation(status, expected_value DESC);
+CREATE INDEX IF NOT EXISTS idx_pipeline_run_status ON pipeline_run(status, started_at DESC);
+
