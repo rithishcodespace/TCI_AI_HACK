@@ -40,7 +40,7 @@ class ReviewService:
                 total_reviews=0,
                 sentiment_distribution={"Positive": 0, "Neutral": 0, "Negative": 0},
                 top_recurring_themes=[],
-                actionable_ai_insights=["Upload reviews to generate insights from PostgreSQL data."]
+                actionable_ai_insights=["Connect store inventory and demand velocity signals to generate retail decision intelligence."]
             )
 
         positives = sum(1 for r in reviews if r.sentiment == "Positive")
@@ -54,9 +54,16 @@ class ReviewService:
                 "Neutral": round((neutrals / total) * 100, 1),
                 "Negative": round((negatives / total) * 100, 1),
             },
-            top_recurring_themes=["Campus Dining Food Quality", "Canteen Service Speed", "Hygiene & Seating"],
+            top_recurring_themes=[
+                "Fresh Staples & Grains Stockout",
+                "Perishable Clearance & Dynamic Markdowns",
+                "Promotion Run-Rate Dampening",
+                "Inter-Store Inventory Balancing",
+                "Supplier Lead-Time Reliability"
+            ],
             actionable_ai_insights=[
-                "Address peak-hour serving speed to reduce negative feedback by ~35%.",
-                "Positive responses for healthy meal options continue to trend upward."
+                "Expedite PO for Basmati Rice (2.1 days cover vs 6-day lead time) to prevent ₹38,000 lost margin.",
+                "Execute dynamic 25% markdown on Celebration Gift Boxes to clear inventory 22 days before expiry.",
+                "Dampen sunflower oil promotion discount from 20% to 10% to extend inventory cover by 6 days."
             ]
         )

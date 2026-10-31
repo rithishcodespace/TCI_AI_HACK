@@ -480,7 +480,7 @@ export default function AuthPage({
       {/* ========================================================
           RIGHT COLUMN: VISUAL BRANDING & ILLUSTRATION
       ======================================================== */}
-      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-[#EFF6FF] via-[#EEF2FF] to-[#DBEAFE] relative overflow-hidden flex-col justify-between p-12 xl:p-16 border-l border-blue-100/60">
+      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-[#EFF6FF] via-[#EEF2FF] to-[#DBEAFE] relative overflow-hidden flex-col justify-between px-8 py-6 xl:px-12 xl:py-8 border-l border-blue-100/60">
 
         {/* Soft Background Radial Decor */}
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-300/25 rounded-full blur-3xl pointer-events-none" />
@@ -489,63 +489,63 @@ export default function AuthPage({
         {/* Top Feature Tag & Headline */}
         <div className="relative z-10 max-w-lg">
           {/* Pill Badge */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/85 backdrop-blur-xs border border-blue-200/60 shadow-2xs text-[#2563EB] text-[11px] font-bold mb-5">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/85 backdrop-blur-xs border border-blue-200/60 shadow-2xs text-[#2563EB] text-[11px] font-bold mb-3">
             <Activity className="w-3.5 h-3.5 stroke-[2.2]" />
             <span>Retail AI • Decision Intelligence</span>
           </div>
 
-          <h2 className="text-[40px] xl:text-[46px] font-[800] tracking-[-0.03em] leading-[1.12]">
+          <h2 className="text-[28px] xl:text-[34px] font-[800] tracking-[-0.03em] leading-[1.14]">
             <span className="text-[#0F172A] block">Connected decisions.</span>
             <span className="text-[#2563EB] block">Measurable impact.</span>
           </h2>
 
-          <p className="mt-4 text-[15px] xl:text-[16px] text-[#475569] leading-relaxed">
+          <p className="mt-2 text-[13px] xl:text-[13.5px] text-[#475569] leading-relaxed max-w-[440px]">
             An agentic AI system that reasons across enterprise information to coordinate what action each store or channel should take next, and why.
           </p>
 
           {/* 3 Value Props */}
-          <div className="mt-8 space-y-4">
+          <div className="mt-4 space-y-2.5">
 
             {/* Value 1 */}
-            <div className="flex items-start gap-3.5">
-              <div className="w-9 h-9 rounded-xl bg-blue-100/80 text-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
-                <Activity className="w-4 h-4 fill-blue-600/20" />
+            <div className="flex items-start gap-3">
+              <div className="w-7 h-7 rounded-lg bg-blue-100/80 text-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
+                <Activity className="w-3.5 h-3.5 fill-blue-600/20" />
               </div>
               <div>
-                <h4 className="text-[14px] font-bold text-slate-900 leading-tight">
+                <h4 className="text-[13px] font-bold text-slate-900 leading-tight">
                   Cross-Signal Reasoning
                 </h4>
-                <p className="text-[12.5px] text-slate-500 leading-normal mt-0.5">
-                  Synthesizes sales, live inventory, promotions, lead times, and weather.
+                <p className="text-[11.5px] text-slate-500 leading-normal mt-0.5">
+                  Synthesizes sales velocity, on-hand buffer, promo elasticity, and weather.
                 </p>
               </div>
             </div>
 
             {/* Value 2 */}
-            <div className="flex items-start gap-3.5">
-              <div className="w-9 h-9 rounded-xl bg-blue-100/80 text-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
-                <Lightbulb className="w-4 h-4 fill-blue-600/20" />
+            <div className="flex items-start gap-3">
+              <div className="w-7 h-7 rounded-lg bg-blue-100/80 text-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
+                <Lightbulb className="w-3.5 h-3.5 fill-blue-600/20" />
               </div>
               <div>
-                <h4 className="text-[14px] font-bold text-slate-900 leading-tight">
+                <h4 className="text-[13px] font-bold text-slate-900 leading-tight">
                   Prescriptive Action Engine
                 </h4>
-                <p className="text-[12.5px] text-slate-500 leading-normal mt-0.5">
+                <p className="text-[11.5px] text-slate-500 leading-normal mt-0.5">
                   Recommends exact actions: Replenish, Transfer, Markdown, or Allocate.
                 </p>
               </div>
             </div>
 
             {/* Value 3 */}
-            <div className="flex items-start gap-3.5">
-              <div className="w-9 h-9 rounded-xl bg-blue-100/80 text-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
-                <TrendingUp className="w-4 h-4 text-emerald-600" />
+            <div className="flex items-start gap-3">
+              <div className="w-7 h-7 rounded-lg bg-blue-100/80 text-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
+                <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
               </div>
               <div>
-                <h4 className="text-[14px] font-bold text-slate-900 leading-tight">
+                <h4 className="text-[13px] font-bold text-slate-900 leading-tight">
                   Measurable ROI vs Baseline
                 </h4>
-                <p className="text-[12.5px] text-slate-500 leading-normal mt-0.5">
+                <p className="text-[11.5px] text-slate-500 leading-normal mt-0.5">
                   Prevents stockouts (-88%), slashes excess inventory, and protects margins.
                 </p>
               </div>
@@ -554,36 +554,36 @@ export default function AuthPage({
           </div>
         </div>
 
-        {/* Bottom Graphic & Illustrated Scene - Positioned Up */}
-        <div className="relative w-full mb-8 lg:mb-12 xl:mb-14 -translate-y-4 lg:-translate-y-8 flex items-center justify-center">
+        {/* Bottom Graphic & Illustrated Scene - Positioned with ample breathing room */}
+        <div className="relative w-full flex items-center justify-center mt-3 mb-2">
 
-          <div className="relative w-full max-w-[400px] h-[230px]">
+          <div className="relative w-full max-w-[370px] h-[175px]">
 
             {/* Floating Replenish Card (Left) */}
-            <div className="absolute -left-2 top-8 z-20 bg-white rounded-2xl p-2.5 px-3 shadow-[0_10px_25px_rgba(37,99,235,0.12)] border border-blue-100 flex items-center gap-2 text-blue-600 animate-bounce duration-1000">
-              <Boxes className="w-5 h-5 stroke-[2.2] text-[#5244E9]" />
+            <div className="absolute -left-2 top-8 z-20 bg-white rounded-xl p-2 px-2.5 shadow-[0_10px_20px_rgba(37,99,235,0.10)] border border-blue-100 flex items-center gap-2 text-blue-600">
+              <Boxes className="w-4 h-4 stroke-[2.2] text-[#5244E9]" />
               <div className="text-left">
-                <p className="text-[10px] font-bold text-slate-800 leading-tight">Replenish</p>
-                <p className="text-[9px] font-bold text-emerald-600 leading-none">+450 Units</p>
+                <p className="text-[9.5px] font-bold text-slate-800 leading-tight">Replenish</p>
+                <p className="text-[8.5px] font-bold text-emerald-600 leading-none">+450 Units</p>
               </div>
             </div>
 
-            {/* Floating Accuracy Badge (Center-Left) */}
-            <div className="absolute left-16 -top-3 z-20 bg-white rounded-2xl p-2.5 px-3.5 shadow-[0_15px_30px_rgba(37,99,235,0.15)] border border-blue-100/80 min-w-[170px]">
+            {/* Floating Accuracy Badge (Top-Center) */}
+            <div className="absolute left-10 -top-1 z-20 bg-white rounded-xl p-2 px-3 shadow-[0_10px_25px_rgba(37,99,235,0.12)] border border-blue-100/80">
               <div className="flex items-center gap-1.5 text-emerald-600 mb-0.5">
                 <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" />
-                <span className="text-[11px] font-bold text-slate-900">98.4% Decision Accuracy</span>
+                <span className="text-[10.5px] font-bold text-slate-900">98.4% Decision Accuracy</span>
               </div>
-              <p className="text-[9.5px] font-semibold text-[#5244E9]">+ $24.5K Margin Protected</p>
+              <p className="text-[9px] font-semibold text-[#5244E9]">+ $24.5K Margin Protected</p>
             </div>
 
             {/* Floating Stockout Prevention Card (Right) */}
-            <div className="absolute -right-2 top-4 z-20 bg-white rounded-2xl p-2.5 px-3 shadow-[0_10px_25px_rgba(37,99,235,0.12)] border border-blue-100 flex items-center gap-2 text-slate-800">
+            <div className="absolute -right-1 top-6 z-20 bg-white rounded-xl p-2 px-2.5 shadow-[0_10px_20px_rgba(37,99,235,0.10)] border border-blue-100 flex items-center gap-1.5 text-slate-800">
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-bold text-slate-800">Zero Stockouts</span>
+              <span className="text-[9.5px] font-bold text-slate-800">Zero Stockouts</span>
             </div>
 
-            {/* Vector Illustration Scene: Student on Bench with Laptop */}
+            {/* Vector Illustration Scene: Retail Decision Analyst on Bench with Laptop */}
             <svg viewBox="0 0 400 240" className="w-full h-full drop-shadow-md" fill="none" xmlns="http://www.w3.org/2000/svg">
               {/* Ground shadow */}
               <ellipse cx="230" cy="225" rx="150" ry="12" fill="#BFDBFE" opacity="0.6" />
@@ -600,7 +600,7 @@ export default function AuthPage({
               <path d="M350 185 Q365 140 375 110 Q380 150 350 185 Z" fill="#93C5FD" />
               <path d="M350 185 Q370 160 385 145 Q375 175 350 185 Z" fill="#3B82F6" />
 
-              {/* Student Body - Sitting */}
+              {/* Retail Analyst Body - Sitting */}
               {/* Legs */}
               <path d="M255 150 L255 190 L220 190 L210 220" stroke="#1E293B" strokeWidth="14" strokeLinecap="round" strokeLinejoin="round" />
               <path d="M245 150 L245 195 L200 195 L190 220" stroke="#0F172A" strokeWidth="14" strokeLinecap="round" strokeLinejoin="round" />

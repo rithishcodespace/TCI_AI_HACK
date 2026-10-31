@@ -20,7 +20,7 @@ export default function AuthModal({
   onAuthSuccess 
 }) {
   const [mode, setMode] = useState(initialMode); // 'signin' | 'signup'
-  const [selectedRole, setSelectedRole] = useState('student');
+  const [selectedRole, setSelectedRole] = useState('store_manager');
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,21 +31,21 @@ export default function AuthModal({
 
   const roles = [
     {
-      id: 'student',
-      title: 'Student',
-      description: 'Submit feedback',
+      id: 'store_manager',
+      title: 'Store Manager',
+      description: 'Store replenishment',
       icon: User,
     },
     {
-      id: 'canteen_manager',
-      title: 'Canteen Manager',
-      description: 'Manage insights',
+      id: 'supply_chain',
+      title: 'Supply Chain Lead',
+      description: 'Inventory & logistics',
       icon: ClipboardList,
     },
     {
-      id: 'admin',
-      title: 'Administrator',
-      description: 'Full access',
+      id: 'executive',
+      title: 'Category Lead',
+      description: 'Pricing & margins',
       icon: ShieldCheck,
     },
   ];
@@ -170,12 +170,12 @@ export default function AuthModal({
         {/* Title and Subtitle */}
         <div className="mt-4">
           <h2 className="text-[21px] font-[800] text-slate-900 tracking-[-0.02em]">
-            {mode === 'signin' ? 'Welcome to VoiceOfCustomer' : 'Create an Account'}
+            {mode === 'signin' ? 'Welcome to RetailSense' : 'Create an Account'}
           </h2>
           <p className="text-[13px] text-slate-500 mt-0.5">
             {mode === 'signin' 
               ? 'Sign in to continue to your workspace.' 
-              : 'Sign up to get started with feedback intelligence.'}
+              : 'Sign up to coordinate connected retail decisions.'}
           </p>
         </div>
 

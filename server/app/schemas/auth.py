@@ -4,17 +4,17 @@ from pydantic import BaseModel
 class LoginRequest(BaseModel):
     email: str
     password: str
-    role: Optional[str] = "student"
+    role: Optional[str] = "store_manager"
 
 class SignupRequest(BaseModel):
     fullName: str
     email: str
     password: str
-    role: Optional[str] = "student"
+    role: Optional[str] = "store_manager"
 
 class GoogleAuthRequest(BaseModel):
     token: Optional[str] = None
-    role: Optional[str] = "student"
+    role: Optional[str] = "store_manager"
 
 class RefreshTokenRequest(BaseModel):
     refresh_token: str

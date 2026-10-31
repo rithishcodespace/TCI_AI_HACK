@@ -51,7 +51,7 @@ async def login(credentials: LoginRequest, db: Session = Depends(get_db)):
             id=f"usr_{uuid.uuid4().hex[:8]}",
             name=credentials.email.split("@")[0].capitalize(),
             email=credentials.email,
-            role=credentials.role or "student",
+            role=credentials.role or "store_manager",
             hashed_password=hash_password(credentials.password),
             provider="credentials"
         )
@@ -94,7 +94,7 @@ async def signup(data: SignupRequest, db: Session = Depends(get_db)):
             id=f"usr_{uuid.uuid4().hex[:8]}",
             name=data.fullName,
             email=data.email,
-            role=data.role or "student",
+            role=data.role or "store_manager",
             hashed_password=hash_password(data.password),
             provider="credentials"
         )
@@ -124,7 +124,7 @@ async def signup(data: SignupRequest, db: Session = Depends(get_db)):
 
 @router.post("/google", response_model=UserResponse, summary="Authenticate via Google OAuth")
 async def google_login(payload: GoogleAuthRequest, db: Session = Depends(get_db)):
-    user_email = "google.user@college.edu"
+    user_email = "manager@retailchain.com"
     user_name = "Google User"
     avatar_url = "https://lh3.googleusercontent.com/a/default-user=s96-c"
 
@@ -162,7 +162,7 @@ async def google_login(payload: GoogleAuthRequest, db: Session = Depends(get_db)
             id=f"goog_{uuid.uuid4().hex[:8]}",
             name=user_name,
             email=user_email,
-            role=payload.role or "student",
+            role=payload.role or "store_manager",
             avatar=avatar_url,
             provider="google"
         )

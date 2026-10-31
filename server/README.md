@@ -1,6 +1,6 @@
-# VoiceOfCustomer Backend (FastAPI + PostgreSQL)
+# RetailSense Backend (FastAPI + PostgreSQL)
 
-Production-ready FastAPI backend for VoiceOfCustomer feedback intelligence, connected to PostgreSQL with SQLAlchemy ORM.
+Production-ready FastAPI backend for Retail / CPG Decision Intelligence, connected to PostgreSQL with SQLAlchemy ORM.
 
 ## 📁 Project Structure
 
@@ -54,8 +54,8 @@ The database is initialized and accepting connections on localhost:
   ```
 
 Tables created automatically on startup:
-- `users`: Registered users, credentials, roles (`student`, `canteen_manager`, `admin`), and Google OAuth profiles.
-- `reviews`: Customer feedback, ratings (1–5), calculated sentiment, and recurring themes.
+- `users`: Registered users, credentials, roles (`store_manager`, `supply_chain`, `executive`), and Google OAuth profiles.
+- `reviews`: Customer feedback and recurring product themes.
 
 ## 🚀 Getting Started
 
@@ -67,21 +67,30 @@ source .venv/bin/activate
 
 ### 2. Run the Development Server
 ```bash
-# Using uvicorn with live reload on port 8000
-uvicorn app.main:app --reload --port 8000
+# Using uvicorn with live reload on port 8001 (always use 8001)
+uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
 ```
 
 ### 3. Interactive API Documentation
-- **Swagger UI**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **ReDoc**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+- **Swagger UI**: [http://localhost:8001/docs](http://localhost:8001/docs)
+- **ReDoc**: [http://localhost:8001/redoc](http://localhost:8001/redoc)
 
 ## 📡 Available Endpoints
 
-- `GET  /` - Root welcome & database connectivity status
-- `GET  /api/v1/health` - Service health status
-- `POST /api/v1/auth/login` - User login with PostgreSQL
-- `POST /api/v1/auth/signup` - Register a new user in PostgreSQL
-- `POST /api/v1/auth/google` - Authenticate via Google OAuth
-- `GET  /api/v1/reviews/` - Retrieve all reviews from PostgreSQL
-- `POST /api/v1/reviews/` - Add a new review into PostgreSQL
-- `GET  /api/v1/reviews/insights` - Aggregate sentiment distribution & AI insights
+### 🔐 Authentication & Session
+- `POST /api/v1/auth/signup` - Register a store manager or category lead account
+- `POST /api/v1/auth/login` - Dual JWT issuance (Access 60m + Refresh 7d)
+- `POST /api/v1/auth/refresh` - Refresh access token using refresh token
+- `POST /api/v1/auth/google` - Google OAuth profile sync and session persistence
+
+### 🎯 Retail Decision Intelligence
+- `GET  /api/v1/dashboard/kpis` - Top-level retail executive metrics (service level, stockout risk, excess stock, margins)
+- `GET  /api/v1/recommendations` - Ranked candidate business actions with confidence and impact
+- `POST /api/v1/recommendations/{id}/decide` - Human-in-the-loop decision (Approve / Modify / Reject)
+- `POST /api/v1/pipeline/run` - Trigger automated cross-signal decision pipeline
+- `GET  /api/v1/inventory/risk-board` - Real-time SKU cover days, lead times, and stockout probability
+- `GET  /api/v1/backtest` - 6-week holdout replay comparison (AI vs baseline)
+- `GET  /api/v1/data-quality` - Data hygiene audit ledger (unobserved lost demand reconstruction, POS clamping)
+- `POST /api/v1/whatsapp/chat` - Conversational WhatsApp decision simulation endpoint
+- `GET  /api/v1/export/purchase-orders` - Dispatched PO export as CSV for ERP ingestion
+- `GET  /api/v1/decisions/` - Full enterprise multi-store decision ledger

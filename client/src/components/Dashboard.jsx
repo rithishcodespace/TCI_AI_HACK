@@ -360,7 +360,7 @@ export default function Dashboard({
   const navItems = [
     { id: 'overview', name: 'Overview', icon: LayoutGrid },
     { id: 'actions', name: 'AI Insights & Decisions', icon: Sparkles, badge: recommendations.filter(r => r.status === 'pending').length },
-    { id: 'risk', name: 'All Reviews / Risk Board', icon: BarChart3 },
+    { id: 'risk', name: 'SKU Inventory Risk Board', icon: BarChart3 },
     { id: 'forecast', name: 'Demand Forecasts', icon: TrendingUp },
     { id: 'backtest', name: 'AI vs Baseline (Proof)', icon: CheckCircle2 },
     { id: 'staff_todo', name: 'Store Staff To-Do', icon: Check },

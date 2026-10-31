@@ -286,21 +286,21 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
                   {/* Tabs Row with underline */}
                   <div className="flex items-center gap-4 border-b border-slate-100 pb-2">
                     <button className="text-[12px] font-bold text-slate-900 border-b-2 border-slate-900 pb-2 -mb-[9px]">
-                      All feedback (42,430)
+                      All Actions (42,430)
                     </button>
                     <button className="text-[11.5px] text-slate-400 font-normal pb-2">
-                      Not classified 1,273 (3%)
+                      Pending Review 1,273 (3%)
                     </button>
                   </div>
 
                   {/* Stacked Cards with Skeleton Lines */}
                   <div className="space-y-2.5 mt-3">
                     
-                    {/* Issue-1 */}
+                    {/* Action-1 */}
                     <div className="bg-[#FAFBFD] border border-slate-100 rounded-2xl p-3 shadow-2xs">
                       <div className="flex items-center justify-between">
                         <span className="text-[10.5px] font-bold text-[#5244E9] bg-indigo-50/90 px-2 py-0.5 rounded-md">
-                          Issue-1
+                          Action-1 • Replenish
                         </span>
                         <span className="text-slate-300 tracking-widest text-[13px] font-bold">••</span>
                       </div>
@@ -308,11 +308,11 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
                       <div className="h-2 bg-slate-100 rounded-full w-[60%] mt-1.5" />
                     </div>
 
-                    {/* Issue-2 */}
+                    {/* Action-2 */}
                     <div className="bg-[#FAFBFD] border border-slate-100 rounded-2xl p-3 shadow-2xs">
                       <div className="flex items-center justify-between">
                         <span className="text-[10.5px] font-bold text-[#5244E9] bg-indigo-50/90 px-2 py-0.5 rounded-md">
-                          Issue-2
+                          Action-2 • Markdown
                         </span>
                         <span className="text-slate-300 tracking-widest text-[13px] font-bold">••</span>
                       </div>
@@ -320,11 +320,11 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
                       <div className="h-2 bg-slate-100 rounded-full w-[45%] mt-1.5" />
                     </div>
 
-                    {/* Issue-3 */}
+                    {/* Action-3 */}
                     <div className="bg-[#FAFBFD] border border-slate-100 rounded-2xl p-3 shadow-2xs">
                       <div className="flex items-center justify-between">
                         <span className="text-[10.5px] font-bold text-[#5244E9] bg-indigo-50/90 px-2 py-0.5 rounded-md">
-                          Issue-3
+                          Action-3 • Adjust Promo
                         </span>
                         <span className="text-slate-300 tracking-widest text-[13px] font-bold">••</span>
                       </div>
@@ -346,7 +346,7 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
                 
                 <div className="flex items-center gap-2">
                   <span className="text-[12.5px] font-bold text-slate-900">
-                    32 negative feedback
+                    32 stockout alerts
                   </span>
                   <span className="bg-indigo-50 text-[#5244E9] text-[10.5px] font-bold px-1.5 py-0.5 rounded">
                     ↑ 56%
@@ -354,7 +354,7 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
                 </div>
 
                 <p className="mt-2 text-[10.5px] text-slate-500 leading-snug">
-                  "Support staff was very supportive and professional, <span className="text-rose-600 bg-rose-50 px-1 py-0.5 rounded font-semibold">but the app crashes ...</span>"
+                  "Basmati Rice 5kg cover is 2.1 days vs 6-day lead time, <span className="text-rose-600 bg-rose-50 px-1 py-0.5 rounded font-semibold">stockout likely on Thursday ...</span>"
                 </p>
               </div>
 
@@ -399,15 +399,15 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
                 <div className="flex items-center justify-between text-[10px] text-slate-500 font-medium px-1 mt-3">
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-[#F43F5E]" />
-                    <span>Negative</span>
+                    <span>Stockout</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-[#F59E0B]" />
-                    <span>Neutral</span>
+                    <span>At Risk</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-                    <span>Positive</span>
+                    <span>Optimal</span>
                   </div>
                 </div>
 
