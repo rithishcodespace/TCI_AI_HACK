@@ -28,7 +28,7 @@ export default function App() {
 
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
-      <div className="min-h-screen bg-white">
+      <div className={`bg-white ${currentView === 'auth' ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
         {currentView === 'landing' && (
           <LandingPage 
             onLoginClick={() => handleOpenAuth('signin')}

@@ -66,7 +66,7 @@ export default function AuthPage({
 
         // Sync with backend if available
         try {
-          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001/api/v1';
           await fetch(`${apiUrl}/auth/google`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -122,7 +122,7 @@ export default function AuthPage({
 
     setIsLoading(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001/api/v1';
       const endpoint = mode === 'signin' ? `${apiUrl}/auth/login` : `${apiUrl}/auth/signup`;
       const payload = mode === 'signin' 
         ? { email, password, role: selectedRole }
@@ -163,28 +163,31 @@ export default function AuthPage({
   };
 
   return (
-    <div className="min-h-screen bg-white flex font-sans text-slate-800 antialiased selection:bg-indigo-100 selection:text-indigo-900">
+    <div className="h-screen w-full bg-white flex flex-col lg:flex-row font-sans text-slate-800 antialiased selection:bg-indigo-100 selection:text-indigo-900 overflow-y-auto lg:overflow-hidden relative">
       
+      {/* Top-Left Back Button */}
+      <button
+        onClick={onBackToHome}
+        className="absolute top-3.5 left-4 sm:top-5 sm:left-6 z-20 inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors py-1.5 px-2.5 rounded-lg hover:bg-slate-100/80 cursor-pointer"
+      >
+        <ArrowLeft className="w-3.5 h-3.5" />
+        <span>Back to home</span>
+      </button>
+
       {/* ========================================================
           LEFT COLUMN: AUTH FORM
       ======================================================== */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-between p-6 sm:p-10 lg:p-14 xl:p-16 overflow-y-auto">
+      <div className="w-full lg:w-1/2 h-full flex flex-col justify-between items-center px-6 sm:px-10 lg:px-8 xl:px-14 py-4 lg:py-6 relative overflow-y-auto lg:overflow-y-auto">
         
-        {/* Top Header / Back Button & Brand Logo */}
-        <div>
-          <div className="flex items-center justify-between mb-8">
-            <button
-              onClick={onBackToHome}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors py-1.5 px-2.5 rounded-lg hover:bg-slate-50"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to home</span>
-            </button>
-          </div>
+        {/* Spacer for top symmetry */}
+        <div className="w-full h-4 sm:h-6 shrink-0" />
 
-          <div className="flex items-center gap-3 select-none">
-            {/* Logo Helix Knot */}
-            <svg className="w-8 h-8" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        {/* Center Container: Main Form */}
+        <div className="w-full max-w-[400px] my-auto flex flex-col justify-center py-2">
+          
+          {/* Centered Brand Logo */}
+          <div className="flex items-center justify-center gap-2.5 select-none mb-2.5 sm:mb-3">
+            <svg className="w-7 h-7 shrink-0" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <linearGradient id="authPageGrad" x1="4" y1="4" x2="32" y2="32" gradientUnits="userSpaceOnUse">
                   <stop stopColor="#F43F5E" />
@@ -207,24 +210,21 @@ export default function AuthPage({
                 strokeLinejoin="round"
               />
             </svg>
-            <div className="flex flex-col">
-              <span className="text-[19px] font-[800] text-slate-900 tracking-tight leading-tight">
+            <div className="flex flex-col text-left">
+              <span className="text-[17px] sm:text-[18px] font-[800] text-slate-900 tracking-tight leading-tight">
                 VoiceOfCustomer
               </span>
-              <span className="text-[9px] font-[700] text-slate-400 tracking-[0.14em] uppercase leading-tight mt-0.5">
+              <span className="text-[8.5px] font-[700] text-slate-400 tracking-[0.14em] uppercase leading-tight mt-0.5">
                 FEEDBACK INTELLIGENCE
               </span>
             </div>
           </div>
-        </div>
 
-        {/* Center Container: Main Form */}
-        <div className="w-full max-w-[430px] mx-auto my-8">
-          
-          <h1 className="text-[32px] sm:text-[36px] font-[800] text-[#0F172A] tracking-[-0.03em] leading-tight">
+          {/* Heading & Subtitle */}
+          <h1 className="text-[24px] sm:text-[27px] font-[800] text-[#0F172A] tracking-tight leading-tight text-center">
             {mode === 'signin' ? 'Welcome back' : 'Create an account'}
           </h1>
-          <p className="text-[14px] sm:text-[15px] text-[#64748B] mt-1.5 font-normal">
+          <p className="text-[12.5px] sm:text-[13px] text-[#64748B] mt-1 font-normal text-center">
             {mode === 'signin' 
               ? 'Sign in to continue to your workspace.' 
               : 'Sign up to start sharing and managing insights.'}
@@ -232,21 +232,21 @@ export default function AuthPage({
 
           {/* Toast Notification */}
           {notification && (
-            <div className="mt-4 p-3 bg-amber-50 border border-amber-200/80 rounded-xl text-xs text-amber-800 flex items-center justify-between">
+            <div className="mt-2.5 p-2.5 bg-amber-50 border border-amber-200/80 rounded-xl text-xs text-amber-800 flex items-center justify-between">
               <span>{notification}</span>
-              <button onClick={() => setNotification('')} className="text-amber-500 hover:text-amber-700">
+              <button onClick={() => setNotification('')} className="text-amber-500 hover:text-amber-700 ml-2">
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
           )}
 
           {/* Select your role */}
-          <div className="mt-7">
-            <label className="block text-[13px] font-semibold text-slate-700 mb-2.5">
+          <div className="mt-3.5 sm:mt-4">
+            <label className="block text-[12px] font-semibold text-slate-700 mb-1.5 text-left">
               Select your role
             </label>
 
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-3 gap-2">
               {roles.map((role) => {
                 const isSelected = selectedRole === role.id;
                 const Icon = role.icon;
@@ -256,19 +256,19 @@ export default function AuthPage({
                     key={role.id}
                     type="button"
                     onClick={() => setSelectedRole(role.id)}
-                    className={`flex flex-col items-center justify-center p-3 sm:p-3.5 rounded-2xl transition-all duration-150 text-center cursor-pointer ${
+                    className={`flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-xl transition-all duration-150 text-center cursor-pointer ${
                       isSelected
                         ? 'border-2 border-[#5244E9] bg-[#F5F3FF] shadow-xs'
-                        : 'border border-slate-200/80 bg-white hover:border-slate-300 hover:bg-slate-50/50'
+                        : 'border border-slate-200/90 bg-white hover:border-slate-300 hover:bg-slate-50/50'
                     }`}
                   >
-                    <div className={`mb-1.5 ${isSelected ? 'text-[#5244E9]' : 'text-slate-600'}`}>
-                      <Icon className="w-5 h-5 stroke-[2]" />
+                    <div className={`mb-1 ${isSelected ? 'text-[#5244E9]' : 'text-slate-500'}`}>
+                      <Icon className="w-4 h-4 stroke-[2]" />
                     </div>
-                    <span className={`text-[12px] font-bold leading-tight ${isSelected ? 'text-[#5244E9]' : 'text-slate-800'}`}>
+                    <span className={`text-[11.5px] font-bold leading-tight ${isSelected ? 'text-[#5244E9]' : 'text-slate-800'}`}>
                       {role.title}
                     </span>
-                    <span className={`text-[9.5px] leading-tight mt-1 ${isSelected ? 'text-[#5244E9]/80 font-medium' : 'text-slate-400'}`}>
+                    <span className={`text-[9px] leading-tight mt-0.5 ${isSelected ? 'text-[#5244E9]/80 font-medium' : 'text-slate-400'}`}>
                       {role.description}
                     </span>
                   </button>
@@ -278,17 +278,17 @@ export default function AuthPage({
           </div>
 
           {/* Form Inputs */}
-          <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+          <form onSubmit={handleSubmit} className="mt-3 space-y-2.5">
             
             {/* Full Name in signup mode */}
             {mode === 'signup' && (
               <div>
-                <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
+                <label className="block text-[12px] font-semibold text-slate-700 mb-1 text-left">
                   Full name
                 </label>
                 <div className="relative flex items-center">
-                  <span className="absolute left-3.5 text-slate-400 pointer-events-none">
-                    <Users className="w-4 h-4" />
+                  <span className="absolute left-3 text-slate-400 pointer-events-none">
+                    <Users className="w-3.5 h-3.5" />
                   </span>
                   <input
                     type="text"
@@ -296,7 +296,7 @@ export default function AuthPage({
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Alex Morgan"
-                    className="w-full pl-10 pr-3.5 py-3 bg-white border border-slate-200 rounded-xl text-[14px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#5244E9] focus:ring-2 focus:ring-[#5244E9]/15 transition-all"
+                    className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#5244E9] focus:ring-2 focus:ring-[#5244E9]/15 transition-all"
                   />
                 </div>
               </div>
@@ -304,12 +304,12 @@ export default function AuthPage({
 
             {/* Email Address */}
             <div>
-              <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
+              <label className="block text-[12px] font-semibold text-slate-700 mb-1 text-left">
                 Email address
               </label>
               <div className="relative flex items-center">
-                <span className="absolute left-3.5 text-slate-400 pointer-events-none">
-                  <Mail className="w-4 h-4" />
+                <span className="absolute left-3 text-slate-400 pointer-events-none">
+                  <Mail className="w-3.5 h-3.5" />
                 </span>
                 <input
                   type="email"
@@ -317,19 +317,19 @@ export default function AuthPage({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@college.edu"
-                  className="w-full pl-10 pr-3.5 py-3 bg-white border border-slate-200 rounded-xl text-[14px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#5244E9] focus:ring-2 focus:ring-[#5244E9]/15 transition-all"
+                  className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#5244E9] focus:ring-2 focus:ring-[#5244E9]/15 transition-all"
                 />
               </div>
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">
+              <label className="block text-[12px] font-semibold text-slate-700 mb-1 text-left">
                 Password
               </label>
               <div className="relative flex items-center">
-                <span className="absolute left-3.5 text-slate-400 pointer-events-none">
-                  <Lock className="w-4 h-4" />
+                <span className="absolute left-3 text-slate-400 pointer-events-none">
+                  <Lock className="w-3.5 h-3.5" />
                 </span>
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -337,24 +337,24 @@ export default function AuthPage({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="w-full pl-10 pr-10 py-3 bg-white border border-slate-200 rounded-xl text-[14px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#5244E9] focus:ring-2 focus:ring-[#5244E9]/15 transition-all"
+                  className="w-full pl-9 pr-9 py-2 bg-white border border-slate-200 rounded-xl text-[13px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#5244E9] focus:ring-2 focus:ring-[#5244E9]/15 transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 text-slate-400 hover:text-slate-600 transition-colors"
+                  className="absolute right-3 text-slate-400 hover:text-slate-600 transition-colors"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                 </button>
               </div>
 
               {mode === 'signin' && (
-                <div className="text-right mt-1.5">
+                <div className="text-right mt-1">
                   <button
                     type="button"
                     onClick={() => setNotification('Password reset link sent to your email.')}
-                    className="text-[12.5px] font-semibold text-[#5244E9] hover:text-[#4333DE] hover:underline transition-colors"
+                    className="text-[11.5px] font-semibold text-[#5244E9] hover:text-[#4333DE] hover:underline transition-colors"
                   >
                     Forgot your password?
                   </button>
@@ -366,17 +366,17 @@ export default function AuthPage({
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#5244E9] hover:bg-[#4333DE] active:scale-[0.99] text-white font-semibold text-[15px] py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all mt-5 cursor-pointer disabled:opacity-75"
+              className="w-full bg-[#5244E9] hover:bg-[#4333DE] active:scale-[0.99] text-white font-semibold text-[13.5px] py-2.5 rounded-xl flex items-center justify-center gap-2 shadow-xs transition-all mt-3 cursor-pointer disabled:opacity-75"
             >
               <span>{isLoading ? 'Signing in...' : (mode === 'signin' ? 'Sign in' : 'Create account')}</span>
-              <ArrowRight className="w-4 h-4 stroke-[2.2]" />
+              <ArrowRight className="w-3.5 h-3.5 stroke-[2.2]" />
             </button>
           </form>
 
           {/* OR Divider */}
-          <div className="relative flex items-center justify-center my-5">
+          <div className="relative flex items-center justify-center my-2.5 sm:my-3">
             <div className="w-full border-t border-slate-200/80" />
-            <span className="absolute bg-white px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            <span className="absolute bg-white px-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
               OR
             </span>
           </div>
@@ -386,7 +386,7 @@ export default function AuthPage({
             type="button"
             onClick={handleGoogleClick}
             disabled={isLoading}
-            className="w-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold text-[14px] py-3 rounded-xl flex items-center justify-center gap-3 transition-all shadow-2xs hover:shadow-xs active:scale-[0.99] cursor-pointer"
+            className="w-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold text-[13px] py-2 sm:py-2.5 rounded-xl flex items-center justify-center gap-2.5 transition-all shadow-2xs hover:shadow-xs active:scale-[0.99] cursor-pointer"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path
@@ -410,7 +410,7 @@ export default function AuthPage({
           </button>
 
           {/* Bottom Switcher */}
-          <div className="text-center mt-6 text-[13px] text-slate-500">
+          <div className="text-center mt-3 text-[12px] sm:text-[12.5px] text-slate-500">
             {mode === 'signin' ? (
               <p>
                 Don't have an account?{' '}
@@ -420,7 +420,7 @@ export default function AuthPage({
                     setMode('signup');
                     setNotification('');
                   }}
-                  className="font-bold text-[#5244E9] hover:underline"
+                  className="font-bold text-[#5244E9] hover:underline cursor-pointer"
                 >
                   Sign up
                 </button>
@@ -434,7 +434,7 @@ export default function AuthPage({
                     setMode('signin');
                     setNotification('');
                   }}
-                  className="font-bold text-[#5244E9] hover:underline"
+                  className="font-bold text-[#5244E9] hover:underline cursor-pointer"
                 >
                   Sign in
                 </button>
@@ -445,7 +445,7 @@ export default function AuthPage({
         </div>
 
         {/* Footer info */}
-        <div className="text-center lg:text-left text-[11px] text-slate-400">
+        <div className="w-full text-center text-[10.5px] text-slate-400 shrink-0">
           © {new Date().getFullYear()} VoiceOfCustomer. All rights reserved.
         </div>
 
@@ -454,72 +454,72 @@ export default function AuthPage({
       {/* ========================================================
           RIGHT COLUMN: VISUAL BRANDING & ILLUSTRATION
       ======================================================== */}
-      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-[#EFF6FF] via-[#EEF2FF] to-[#DBEAFE] relative overflow-hidden flex-col justify-between p-12 xl:p-16 border-l border-blue-100/60">
+      <div className="hidden lg:flex w-1/2 h-full bg-gradient-to-br from-[#EFF6FF] via-[#EEF2FF] to-[#DBEAFE] relative overflow-hidden flex-col justify-between p-6 lg:p-8 xl:p-10 border-l border-blue-100/60 select-none">
         
         {/* Soft Background Radial Decor */}
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-300/25 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-indigo-300/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-24 -right-24 w-80 h-80 bg-blue-300/25 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-indigo-300/20 rounded-full blur-3xl pointer-events-none" />
 
         {/* Top Feature Tag & Headline */}
         <div className="relative z-10 max-w-lg">
           {/* Pill Badge */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/85 backdrop-blur-xs border border-blue-200/60 shadow-2xs text-[#2563EB] text-[11px] font-bold mb-5">
-            <BarChart2 className="w-3.5 h-3.5 stroke-[2.2]" />
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-xs border border-blue-200/60 shadow-2xs text-[#2563EB] text-[10.5px] font-bold mb-3">
+            <BarChart2 className="w-3 h-3 stroke-[2.2]" />
             <span>Feedback Intelligence</span>
           </div>
 
-          <h2 className="text-[40px] xl:text-[46px] font-[800] tracking-[-0.03em] leading-[1.12]">
+          <h2 className="text-[28px] lg:text-[32px] xl:text-[38px] font-[800] tracking-[-0.03em] leading-[1.14]">
             <span className="text-[#0F172A] block">Same feedback.</span>
             <span className="text-[#2563EB] block">Greater impact.</span>
           </h2>
 
-          <p className="mt-4 text-[15px] xl:text-[16px] text-[#475569] leading-relaxed">
+          <p className="mt-2 sm:mt-2.5 text-[13px] xl:text-[14px] text-[#475569] leading-snug max-w-md">
             Help us understand your experience and make your campus dining better for everyone.
           </p>
 
           {/* 3 Value Props */}
-          <div className="mt-8 space-y-4">
+          <div className="mt-3.5 xl:mt-4 space-y-2 xl:space-y-2.5">
             
             {/* Value 1 */}
-            <div className="flex items-start gap-3.5">
-              <div className="w-9 h-9 rounded-xl bg-blue-100/80 text-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
-                <MessageSquare className="w-4 h-4 fill-blue-600/20" />
+            <div className="flex items-start gap-3">
+              <div className="w-7 h-7 xl:w-8 xl:h-8 rounded-lg bg-blue-100/90 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                <MessageSquare className="w-3.5 h-3.5 fill-blue-600/20" />
               </div>
               <div>
-                <h4 className="text-[14px] font-bold text-slate-900 leading-tight">
+                <h4 className="text-[12.5px] xl:text-[13px] font-bold text-slate-900 leading-tight">
                   Share your voice
                 </h4>
-                <p className="text-[12.5px] text-slate-500 leading-normal mt-0.5">
+                <p className="text-[11px] xl:text-[11.5px] text-slate-500 leading-tight mt-0.5">
                   Submit honest feedback in seconds.
                 </p>
               </div>
             </div>
 
             {/* Value 2 */}
-            <div className="flex items-start gap-3.5">
-              <div className="w-9 h-9 rounded-xl bg-blue-100/80 text-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
-                <Lightbulb className="w-4 h-4 fill-blue-600/20" />
+            <div className="flex items-start gap-3">
+              <div className="w-7 h-7 xl:w-8 xl:h-8 rounded-lg bg-blue-100/90 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                <Lightbulb className="w-3.5 h-3.5 fill-blue-600/20" />
               </div>
               <div>
-                <h4 className="text-[14px] font-bold text-slate-900 leading-tight">
+                <h4 className="text-[12.5px] xl:text-[13px] font-bold text-slate-900 leading-tight">
                   Drive real change
                 </h4>
-                <p className="text-[12.5px] text-slate-500 leading-normal mt-0.5">
+                <p className="text-[11px] xl:text-[11.5px] text-slate-500 leading-tight mt-0.5">
                   Your feedback helps identify recurring issues.
                 </p>
               </div>
             </div>
 
             {/* Value 3 */}
-            <div className="flex items-start gap-3.5">
-              <div className="w-9 h-9 rounded-xl bg-blue-100/80 text-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
-                <BarChart2 className="w-4 h-4 fill-blue-600/20" />
+            <div className="flex items-start gap-3">
+              <div className="w-7 h-7 xl:w-8 xl:h-8 rounded-lg bg-blue-100/90 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                <BarChart2 className="w-3.5 h-3.5 fill-blue-600/20" />
               </div>
               <div>
-                <h4 className="text-[14px] font-bold text-slate-900 leading-tight">
+                <h4 className="text-[12.5px] xl:text-[13px] font-bold text-slate-900 leading-tight">
                   Better dining experience
                 </h4>
-                <p className="text-[12.5px] text-slate-500 leading-normal mt-0.5">
+                <p className="text-[11px] xl:text-[11.5px] text-slate-500 leading-tight mt-0.5">
                   Together we create a cleaner, healthier and more enjoyable campus dining experience.
                 </p>
               </div>
@@ -529,33 +529,33 @@ export default function AuthPage({
         </div>
 
         {/* Bottom Graphic & Illustrated Scene */}
-        <div className="relative w-full mt-8 flex items-end justify-center">
+        <div className="relative w-full mt-3 flex items-end justify-center">
           
-          <div className="relative w-full max-w-[440px] h-[260px]">
+          <div className="relative w-full max-w-[340px] xl:max-w-[380px] h-[150px] xl:h-[180px]">
             
             {/* Floating Utensils Card (Left) */}
-            <div className="absolute left-2 top-10 bg-white rounded-2xl p-3 shadow-[0_10px_25px_rgba(37,99,235,0.12)] border border-blue-100 flex items-center justify-center text-blue-600 animate-bounce duration-1000">
-              <Utensils className="w-6 h-6 stroke-[2.2]" />
+            <div className="absolute left-1 top-4 bg-white rounded-xl p-2 shadow-[0_8px_20px_rgba(37,99,235,0.12)] border border-blue-100 flex items-center justify-center text-blue-600">
+              <Utensils className="w-4 h-4 stroke-[2.2]" />
             </div>
 
             {/* Floating 5-Star Speech Bubble (Center-Left) */}
-            <div className="absolute left-14 -top-2 z-20 bg-white rounded-2xl p-3.5 shadow-[0_15px_30px_rgba(37,99,235,0.15)] border border-blue-100/80 min-w-[170px]">
-              <div className="flex items-center gap-1 text-blue-600 mb-1.5">
+            <div className="absolute left-10 -top-3 z-20 bg-white rounded-xl p-2.5 shadow-[0_12px_25px_rgba(37,99,235,0.14)] border border-blue-100/80 min-w-[140px]">
+              <div className="flex items-center gap-0.5 text-blue-600 mb-1">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-3.5 h-3.5 fill-blue-500 text-blue-500" />
+                  <Star key={i} className="w-3 h-3 fill-blue-500 text-blue-500" />
                 ))}
               </div>
-              <div className="w-4/5 h-1.5 bg-slate-200 rounded-full mb-1" />
-              <div className="w-3/5 h-1.5 bg-slate-100 rounded-full" />
+              <div className="w-4/5 h-1 bg-slate-200 rounded-full mb-1" />
+              <div className="w-3/5 h-1 bg-slate-100 rounded-full" />
             </div>
 
             {/* Floating Thumbs Up Card (Right) */}
-            <div className="absolute right-4 top-4 bg-white rounded-2xl p-3 shadow-[0_10px_25px_rgba(37,99,235,0.12)] border border-blue-100 flex items-center justify-center text-blue-600">
-              <ThumbsUp className="w-5 h-5 fill-blue-50 text-blue-600 stroke-[2.2]" />
+            <div className="absolute right-3 top-2 bg-white rounded-xl p-2 shadow-[0_8px_20px_rgba(37,99,235,0.12)] border border-blue-100 flex items-center justify-center text-blue-600">
+              <ThumbsUp className="w-3.5 h-3.5 fill-blue-50 text-blue-600 stroke-[2.2]" />
             </div>
 
             {/* Vector Illustration Scene: Student on Bench with Laptop */}
-            <svg viewBox="0 0 400 240" className="w-full h-full drop-shadow-md" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg viewBox="0 0 400 240" className="w-full h-full drop-shadow-sm" fill="none" xmlns="http://www.w3.org/2000/svg">
               {/* Ground shadow */}
               <ellipse cx="230" cy="225" rx="150" ry="12" fill="#BFDBFE" opacity="0.6" />
               
