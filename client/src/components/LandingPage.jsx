@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { 
   Menu,
   X,
-  Sparkles,
   MessageSquare,
   Check,
   Bell,
@@ -13,10 +12,12 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 flex flex-col justify-between selection:bg-indigo-100 selection:text-indigo-900 font-sans antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-white text-slate-900 flex flex-col selection:bg-indigo-100 selection:text-indigo-900 font-sans antialiased overflow-x-hidden">
       
-      {/* Top Navigation */}
-      <header className="w-full max-w-[1360px] mx-auto px-6 sm:px-12 pt-7 pb-6 flex items-center justify-between relative z-30">
+      {/* First View: Covers 100% of the first viewport on desktop */}
+      <div className="min-h-screen lg:h-screen lg:max-h-screen flex flex-col justify-between relative w-full">
+        {/* Top Navigation */}
+        <header className="w-full max-w-[1360px] mx-auto px-6 sm:px-12 pt-5 pb-3 flex items-center justify-between relative z-30 shrink-0">
         
         {/* Brand Logo with Helix Loop */}
         <div className="flex items-center gap-3 cursor-pointer select-none">
@@ -115,19 +116,14 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
         )}
       </header>
 
-      {/* Main Hero Section (Original Hero Layout Restored) */}
-      <main className="w-full max-w-[1360px] mx-auto px-6 sm:px-12 pt-8 sm:pt-14 pb-16 flex-1 flex flex-col justify-center">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-6 items-center">
+      {/* Main Hero Section */}
+      <main className="w-full max-w-[1360px] mx-auto px-6 sm:px-12 py-3 sm:py-5 flex-1 flex flex-col justify-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-6 items-center">
           
           {/* Left Hero Content */}
           <div className="lg:col-span-5 flex flex-col items-start text-left z-10 lg:pr-2">
             
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EEF4FF] text-[#5244E9] text-[12px] font-semibold mb-5 border border-indigo-100">
-              <Sparkles className="w-3.5 h-3.5 text-[#5244E9]" />
-              <span>AI Decision Intelligence • Retail & CPG</span>
-            </div>
-
-            <h1 className="text-[38px] sm:text-[48px] lg:text-[50px] font-[800] text-[#0F172A] tracking-[-0.03em] leading-[1.12]">
+            <h1 className="text-[38px] sm:text-[46px] lg:text-[48px] font-[800] text-[#0F172A] tracking-[-0.03em] leading-[1.12]">
               Turn Retail Signals <br />
               into Store Decisions
             </h1>
@@ -423,8 +419,9 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
 
         </div>
       </main>
+      </div>
 
-      {/* The 6-Step Loop Section */}
+      {/* The 6-Step Loop Section (Appears after scrolling) */}
       <section id="loop" className="py-16 bg-[#FAFAFC] border-t border-slate-100">
         <div className="max-w-[1360px] mx-auto px-6 sm:px-12">
           
