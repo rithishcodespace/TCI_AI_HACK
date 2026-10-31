@@ -4,9 +4,11 @@ import {
   Menu, 
   X, 
   Sparkles, 
-  Store, 
-  RefreshCw, 
-  AlertTriangle 
+  LayoutGrid, 
+  Share2, 
+  Bell, 
+  ShieldCheck,
+  Folder
 } from 'lucide-react';
 
 export default function LandingPage({ onLoginClick, onSignupClick }) {
@@ -132,10 +134,10 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
           {/* Left Hero Content */}
           <div className="lg:col-span-5 flex flex-col items-start text-left z-10 lg:pr-2">
             
-            {/* Theme Badge */}
+            {/* Retail AI Product Badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50/90 border border-indigo-200/60 text-[#5244E9] text-[11px] font-bold mb-4 shadow-2xs">
               <Sparkles className="w-3.5 h-3.5 stroke-[2.2]" />
-              <span>THEME 2: AI FOR BUSINESS • RETAIL & CPG</span>
+              <span>RETAIL AI • AUTONOMOUS DECISION INTELLIGENCE</span>
             </div>
 
             <h1 className="text-[38px] sm:text-[48px] lg:text-[50px] font-[800] text-[#0F172A] tracking-[-0.03em] leading-[1.12]">
@@ -194,218 +196,224 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
               
               <div className="grid grid-cols-12 min-h-[385px]">
                 
-                {/* Left Panel: Store & SKU Hierarchy */}
+                {/* Left Panel: Taxonomy */}
                 <div className="col-span-5 p-4 sm:p-5 border-r border-slate-100 flex flex-col bg-white rounded-l-2xl">
-                  <h3 className="text-[15px] font-bold text-slate-900 tracking-tight mb-2.5 flex items-center justify-between">
-                    <span>Store Hierarchy</span>
-                    <span className="text-[9.5px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-bold border border-blue-100">Live</span>
+                  <h3 className="text-[15px] font-bold text-slate-900 tracking-tight mb-2.5">
+                    Taxonomy
                   </h3>
 
                   {/* Top Stats */}
                   <div className="grid grid-cols-2 gap-2 pb-3 mb-3 border-b border-slate-100">
                     <div>
-                      <div className="text-[9.5px] text-slate-400 font-medium tracking-tight">Active SKUs</div>
-                      <div className="text-[14px] font-bold text-slate-800 tracking-tight mt-0.5">148,200</div>
+                      <div className="text-[9.5px] text-slate-400 font-medium tracking-tight">Total feedback</div>
+                      <div className="text-[15px] font-bold text-slate-800 tracking-tight mt-0.5">245,234</div>
                     </div>
                     <div>
-                      <div className="text-[9.5px] text-slate-400 font-medium tracking-tight">Prescriptions</div>
-                      <div className="text-[14px] font-bold text-emerald-600 tracking-tight mt-0.5">3,420</div>
+                      <div className="text-[9.5px] text-slate-400 font-medium tracking-tight">Analyzed issues</div>
+                      <div className="text-[15px] font-bold text-slate-800 tracking-tight mt-0.5">135</div>
                     </div>
                   </div>
 
                   {/* Tree Hierarchy */}
                   <div className="space-y-2 text-[10.5px] font-medium text-slate-600">
                     <div className="relative">
-                      {/* Active Store */}
-                      <div className="border border-[#7C3AED] bg-[#FBF9FE] text-slate-800 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-[0_1px_3px_rgba(124,58,237,0.08)]">
+                      {/* Active Parent Node */}
+                      <div className="border border-[#7C3AED] bg-white text-slate-800 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-xs">
                         <span className="text-[9px] text-slate-400 font-bold">›</span>
-                        <Store className="w-3 h-3 text-[#7C3AED]" />
-                        <span className="text-[10.5px] font-semibold text-slate-800 truncate">Store #104 Downtown</span>
+                        <LayoutGrid className="w-3.5 h-3.5 text-[#7C3AED]" />
+                        <span className="text-[11px] font-semibold text-slate-800 truncate">Customer Service</span>
                       </div>
 
-                      {/* Sub-Actions Tree */}
-                      <div className="ml-4 pl-3 border-l border-dashed border-slate-300 pt-2 space-y-2">
+                      {/* Sub-tree with dotted lines */}
+                      <div className="ml-3.5 pl-3 border-l border-dashed border-slate-300 pt-2 space-y-2">
+                        {/* Nested Level 1: Compensation */}
                         <div className="relative flex items-center">
                           <span className="absolute -left-3 top-1/2 w-2.5 border-t border-dashed border-slate-300" />
-                          <div className="border border-emerald-200 bg-emerald-50/60 px-2 py-0.5 rounded text-[9.5px] text-emerald-800 flex items-center gap-1 font-semibold">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                            <span>Replenish (+450)</span>
+                          <div className="border border-slate-200/80 bg-white px-2.5 py-1 rounded-md text-[10px] text-slate-700 flex items-center gap-1.5 font-medium shadow-2xs">
+                            <span className="text-[8.5px] text-slate-400 font-bold">›</span>
+                            <Folder className="w-3 h-3 text-[#7C3AED]" />
+                            <span>Compensation</span>
                           </div>
                         </div>
 
-                        <div className="relative flex items-center">
-                          <span className="absolute -left-3 top-1/2 w-2.5 border-t border-dashed border-slate-300" />
-                          <div className="border border-purple-200 bg-purple-50/60 px-2 py-0.5 rounded text-[9.5px] text-purple-800 flex items-center gap-1 font-semibold">
-                            <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-                            <span>Transfer Inventory</span>
-                          </div>
-                        </div>
-
-                        <div className="relative flex items-center">
-                          <span className="absolute -left-3 top-1/2 w-2.5 border-t border-dashed border-slate-300" />
-                          <div className="border border-amber-200 bg-amber-50/60 px-2 py-0.5 rounded text-[9.5px] text-amber-800 flex items-center gap-1 font-semibold">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                            <span>Markdown (-15%)</span>
+                        {/* Nested Level 2: Refund */}
+                        <div className="ml-3 pl-3 border-l border-dashed border-slate-300 pt-1">
+                          <div className="relative flex items-center">
+                            <span className="absolute -left-3 top-1/2 w-2.5 border-t border-dashed border-slate-300" />
+                            <div className="border border-slate-200/80 bg-white px-2 py-0.5 rounded text-[9.5px] text-slate-700 flex items-center gap-1.5 font-medium shadow-2xs">
+                              <span className="text-[8px] text-slate-400 font-bold">›</span>
+                              <span className="w-2.5 h-2.5 rounded-xs border border-blue-500 bg-blue-50" />
+                              <span>Refund</span>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
 
+                    {/* Sibling items */}
                     <div className="pt-2 space-y-1.5">
-                      <div className="border border-slate-200/80 bg-white px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 text-slate-600">
-                        <span className="text-[9px] text-slate-400">›</span>
-                        <span className="text-[10.5px]">Store #208 Westside Mall</span>
+                      <div className="border border-slate-200/80 bg-white px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 text-slate-600 shadow-2xs">
+                        <span className="text-[9px] text-slate-400 font-bold">›</span>
+                        <LayoutGrid className="w-3.5 h-3.5 text-[#7C3AED]" />
+                        <span className="text-[11px]">App Interface</span>
                       </div>
-                      <div className="border border-slate-200/80 bg-white px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 text-slate-600">
-                        <span className="text-[9px] text-slate-400">›</span>
-                        <span className="text-[10.5px]">Online Fulfillment DC-1</span>
+                      <div className="border border-slate-200/80 bg-white px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 text-slate-600 shadow-2xs">
+                        <span className="text-[9px] text-slate-400 font-bold">›</span>
+                        <LayoutGrid className="w-3.5 h-3.5 text-[#7C3AED]" />
+                        <span className="text-[11px]">Privacy and Safety</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Right Panel: Decision Feed & Reasoning */}
-                <div className="col-span-7 p-4 sm:p-5 bg-[#FBFBFC] flex flex-col justify-between rounded-r-2xl">
+                {/* Right Panel: Content Area */}
+                <div className="col-span-7 p-4 sm:p-5 bg-white flex flex-col justify-between rounded-r-2xl">
                   <div>
-                    <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
-                      <div className="flex items-center gap-1.5 text-slate-800 font-bold text-[13px]">
-                        <span className="text-slate-400 font-semibold text-[14px]">#</span>
-                        <span>Store #104 Actions</span>
+                    <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                      <div className="flex items-center gap-1.5 text-slate-800 font-bold text-[13.5px]">
+                        <LayoutGrid className="w-3.5 h-3.5 text-[#7C3AED]" />
+                        <span>Customer Service</span>
                       </div>
-                      <button className="bg-[#5244E9] hover:bg-[#4637DB] transition-colors text-white text-[10.5px] font-semibold px-2.5 py-1 rounded-md flex items-center gap-1 shadow-xs">
-                        <RefreshCw className="w-2.5 h-2.5 stroke-[2.5]" />
-                        <span>Re-Reason</span>
+                      <button className="bg-[#5244E9] hover:bg-[#4333DE] transition-colors text-white text-[11px] font-semibold px-3 py-1 rounded-lg flex items-center gap-1.5 shadow-xs cursor-pointer">
+                        <Share2 className="w-3 h-3 stroke-[2.2]" />
+                        <span>Share</span>
                       </button>
                     </div>
 
-                    {/* Prescribed Action Cards */}
-                    <div className="mt-3 space-y-2.5">
-                      
-                      {/* Action Card 1: Urgent Replenish */}
-                      <div className="bg-white p-2.5 rounded-xl border border-slate-200/80 shadow-2xs space-y-1 text-left">
-                        <div className="flex items-center justify-between">
-                          <span className="bg-emerald-50 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 rounded border border-emerald-200/60">
-                            REPLENISH (+450 UNITS)
+                    {/* Navigation Tabs */}
+                    <div className="flex items-center gap-5 mt-2.5 mb-3 text-[11px]">
+                      <button className="font-bold text-slate-900 border-b-2 border-[#5244E9] pb-1.5 cursor-pointer">
+                        All feedback (42,430)
+                      </button>
+                      <button className="font-medium text-slate-400 hover:text-slate-600 pb-1.5 cursor-pointer">
+                        Not classified 1,273 (3%)
+                      </button>
+                    </div>
+
+                    {/* Issue Cards */}
+                    <div className="space-y-2.5">
+                      {/* Issue 1 */}
+                      <div className="bg-[#F8FAFC] p-3 rounded-xl border border-slate-100 flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <span className="bg-indigo-100 text-[#5244E9] text-[9.5px] font-bold px-1.5 py-0.5 rounded">
+                            Issue 1
                           </span>
-                          <span className="text-[9px] font-bold text-rose-600">Stockout Risk: 94%</span>
+                          <div className="h-2 bg-slate-200/80 rounded-full w-36 sm:w-44" />
                         </div>
-                        <p className="text-[11px] font-bold text-slate-800 leading-tight">
-                          SKU-9824: Cold Brew 12-Pack (CPG Beverage)
-                        </p>
-                        <p className="text-[9.5px] text-slate-500 leading-tight">
-                          <strong className="text-slate-700">Why:</strong> 34°C heatwave surge • 1.6 days of stock • 4-day lead time.
-                        </p>
-                        <div className="text-[9px] font-semibold text-emerald-700 pt-0.5">
-                          Expected Impact: +$14,200 revenue protected
+                        <div className="flex items-center gap-1 text-[11px]">
+                          <span className="text-amber-500">😐</span>
+                          <span className="text-emerald-500">😊</span>
                         </div>
                       </div>
 
-                      {/* Action Card 2: Inventory Transfer */}
-                      <div className="bg-white p-2.5 rounded-xl border border-slate-200/80 shadow-2xs space-y-1 text-left">
-                        <div className="flex items-center justify-between">
-                          <span className="bg-purple-50 text-purple-700 text-[9px] font-bold px-1.5 py-0.5 rounded border border-purple-200/60">
-                            TRANSFER INVENTORY (180 UNITS)
+                      {/* Issue 2 */}
+                      <div className="bg-[#F8FAFC] p-3 rounded-xl border border-slate-100 flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <span className="bg-indigo-100 text-[#5244E9] text-[9.5px] font-bold px-1.5 py-0.5 rounded">
+                            Issue 2
                           </span>
-                          <span className="text-[9px] font-bold text-blue-600">Balanced Allocation</span>
+                          <div className="h-2 bg-slate-200/80 rounded-full w-28 sm:w-36" />
                         </div>
-                        <p className="text-[11px] font-bold text-slate-800 leading-tight">
-                          SKU-4112: Organic Granola Bites (Snack)
-                        </p>
-                        <p className="text-[9.5px] text-slate-500 leading-tight">
-                          <strong className="text-slate-700">Why:</strong> Suburban DC overstocked by 320u; urban store velocity +42%.
-                        </p>
-                        <div className="text-[9px] font-semibold text-purple-700 pt-0.5">
-                          Expected Impact: Cuts holding costs by 22%
+                        <div className="flex items-center gap-1 text-[11px]">
+                          <span className="text-amber-500">😐</span>
+                          <span className="text-rose-500">☹</span>
                         </div>
                       </div>
 
-                      {/* Action Card 3: Dynamic Markdown */}
-                      <div className="bg-white p-2.5 rounded-xl border border-slate-200/80 shadow-2xs space-y-1 text-left opacity-90">
-                        <div className="flex items-center justify-between">
-                          <span className="bg-amber-50 text-amber-700 text-[9px] font-bold px-1.5 py-0.5 rounded border border-amber-200/60">
-                            MARKDOWN (-15%)
+                      {/* Issue 3 */}
+                      <div className="bg-[#F8FAFC] p-3 rounded-xl border border-slate-100 flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <span className="bg-indigo-100 text-[#5244E9] text-[9.5px] font-bold px-1.5 py-0.5 rounded">
+                            Issue 3
                           </span>
-                          <span className="text-[9px] font-bold text-amber-600">Preserve Margin</span>
+                          <div className="h-2 bg-slate-200/80 rounded-full w-32 sm:w-40" />
                         </div>
-                        <p className="text-[11px] font-bold text-slate-800 leading-tight">
-                          SKU-2041: Seasonal Holiday Confectionery
-                        </p>
-                        <p className="text-[9.5px] text-slate-500 leading-tight">
-                          <strong className="text-slate-700">Why:</strong> Competitor price drop -12% • Expiration in 14 days.
-                        </p>
+                        <div className="flex items-center gap-1 text-[11px]">
+                          <span className="text-amber-500">😐</span>
+                          <span className="text-emerald-500">😊</span>
+                        </div>
                       </div>
-
                     </div>
                   </div>
-
-                  <div className="flex items-center justify-between text-[9.5px] text-slate-400 pt-2 border-t border-slate-100">
-                    <span>Connected Chain: Demand → Replenish → Margin</span>
-                    <span className="font-bold text-emerald-600">All systems sync</span>
-                  </div>
                 </div>
+
               </div>
 
-              {/* OVERLAY CARD 1: Autonomous Risk Alert */}
-              <div className="absolute -bottom-8 -left-5 sm:-left-8 z-20 bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-100 shadow-[0_20px_45px_rgba(15,23,42,0.12)] max-w-[310px]">
-                <div className="absolute -top-3 left-4 w-6 h-6 bg-[#FEF3C7] rounded-full flex items-center justify-center text-[#D97706] shadow-xs border border-amber-200">
-                  <AlertTriangle className="w-3 h-3 stroke-[2.2]" />
+              {/* OVERLAY CARD 1: Negative Feedback Alert */}
+              <div className="absolute -bottom-6 -left-4 sm:-left-7 z-20 bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-100 shadow-[0_20px_45px_rgba(15,23,42,0.12)] max-w-[285px]">
+                {/* Floating Bell Icon */}
+                <div className="absolute -top-3 left-4 w-7 h-7 bg-[#FEF3C7] rounded-full flex items-center justify-center text-[#D97706] shadow-xs border border-amber-200">
+                  <Bell className="w-3.5 h-3.5 stroke-[2.2]" />
                 </div>
 
-                <div className="flex items-center gap-2 pt-0.5 mb-1.5">
-                  <span className="text-[12px] font-[800] text-slate-900 tracking-tight">
-                    Stockout Prevention Alert
+                <div className="flex items-center gap-1.5 pt-0.5 mb-1.5">
+                  <span className="text-rose-600 font-bold text-[12px] flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full border border-rose-500 text-rose-500 flex items-center justify-center text-[7px] font-bold">☹</span>
+                    32 negative feedback
                   </span>
-                  <span className="bg-rose-50 text-rose-700 text-[9px] font-bold px-1.5 py-0.5 rounded border border-rose-200">
-                    Critical
+                  <span className="bg-indigo-50 text-[#5244E9] text-[9.5px] font-bold px-1.5 py-0.5 rounded border border-indigo-100">
+                    ↑ 56%
                   </span>
                 </div>
 
-                <p className="text-[10.5px] text-slate-500 leading-snug font-normal">
-                  SKU-9824 would stock out in <strong className="text-slate-800">36 hours</strong> without replenishment. Action approved automatically.
+                <p className="text-[10px] text-slate-500 leading-snug font-normal">
+                  "Support staff was very supportive and professional, <span className="bg-rose-50 text-rose-700 px-1 py-0.5 rounded font-semibold">but the app crashes ...</span>"
                 </p>
               </div>
 
-              {/* OVERLAY CARD 2: AI vs Baseline Impact Card */}
-              <div className="absolute -bottom-10 -right-4 sm:-right-8 z-20 bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-100 shadow-[0_25px_50px_rgba(15,23,42,0.15)] w-[260px] sm:w-[280px]">
-                <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 mb-2">
-                  <span className="text-[11px] font-bold text-slate-900">AI vs Simple Baseline</span>
-                  <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded">
-                    +18.4% Net Margin
+              {/* OVERLAY CARD 2: Sentiment Stacked Bar Chart */}
+              <div className="absolute -bottom-8 -right-4 sm:-right-7 z-20 bg-white rounded-2xl p-4 border border-slate-100 shadow-[0_25px_50px_rgba(15,23,42,0.15)] w-[265px]">
+                {/* Floating Speech Emoji Bubble */}
+                <div className="absolute -top-3 right-4 bg-white border border-slate-100 rounded-full px-2 py-0.5 shadow-xs flex items-center gap-1">
+                  <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px]">😊</span>
+                  <span className="w-4 h-4 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-[10px]">☹</span>
+                </div>
+
+                {/* 3 Stacked Horizontal Segmented Bars */}
+                <div className="space-y-2 mt-1">
+                  {/* Bar 1 */}
+                  <div className="flex h-2.5 w-full rounded-md overflow-hidden gap-0.5">
+                    <div className="w-[18%] bg-rose-500 rounded-l-xs" />
+                    <div className="w-[14%] bg-amber-400" />
+                    <div className="w-[18%] bg-slate-300" />
+                    <div className="w-[24%] bg-emerald-300" />
+                    <div className="w-[26%] bg-emerald-500 rounded-r-xs" />
+                  </div>
+
+                  {/* Bar 2 */}
+                  <div className="flex h-2.5 w-full rounded-md overflow-hidden gap-0.5">
+                    <div className="w-[12%] bg-rose-500 rounded-l-xs" />
+                    <div className="w-[16%] bg-amber-400" />
+                    <div className="w-[14%] bg-slate-300" />
+                    <div className="w-[22%] bg-emerald-300" />
+                    <div className="w-[36%] bg-emerald-500 rounded-r-xs" />
+                  </div>
+
+                  {/* Bar 3 */}
+                  <div className="flex h-2.5 w-full rounded-md overflow-hidden gap-0.5">
+                    <div className="w-[22%] bg-rose-500 rounded-l-xs" />
+                    <div className="w-[12%] bg-amber-400" />
+                    <div className="w-[16%] bg-slate-300" />
+                    <div className="w-[28%] bg-emerald-300" />
+                    <div className="w-[22%] bg-emerald-500 rounded-r-xs" />
+                  </div>
+                </div>
+
+                {/* Legend below */}
+                <div className="flex items-center justify-between text-[8.5px] text-slate-500 pt-2.5 mt-2 border-t border-slate-100 font-medium">
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full border border-rose-500 text-rose-500 flex items-center justify-center text-[7px] font-bold">☹</span>
+                    Negative
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full border border-slate-400 text-slate-400 flex items-center justify-center text-[7px] font-bold">●</span>
+                    Neutral
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full border border-emerald-500 text-emerald-500 flex items-center justify-center text-[7px] font-bold">😊</span>
+                    Positive
                   </span>
                 </div>
-
-                <div className="space-y-2">
-                  <div>
-                    <div className="flex justify-between text-[9px] text-slate-600 mb-0.5">
-                      <span>Stockouts Averted</span>
-                      <strong className="text-emerald-600">88.4%</strong>
-                    </div>
-                    <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-                      <div style={{ width: '88.4%' }} className="bg-emerald-500 h-full rounded-full" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-[9px] text-slate-600 mb-0.5">
-                      <span>Excess Inventory Cut</span>
-                      <strong className="text-indigo-600">74.2%</strong>
-                    </div>
-                    <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-                      <div style={{ width: '74.2%' }} className="bg-indigo-500 h-full rounded-full" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-[9px] text-slate-600 mb-0.5">
-                      <span>Decision Accuracy</span>
-                      <strong className="text-blue-600">98.1%</strong>
-                    </div>
-                    <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
-                      <div style={{ width: '98.1%' }} className="bg-blue-500 h-full rounded-full" />
-                    </div>
-                  </div>
-                </div>
-
               </div>
 
             </div>
@@ -414,21 +422,28 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
         </div>
       </main>
 
-      {/* Connected Decision Chain Banner / Footer */}
+      {/* Enterprise Infrastructure & Integrations Footer */}
       <footer className="w-full py-5 sm:py-6 bg-white border-t border-slate-100">
         <div className="max-w-[1360px] mx-auto px-6 sm:px-12 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[13px] font-bold text-slate-800">
-              Retail Decision Chain:
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 text-xs text-slate-600">
+            <span className="inline-flex items-center gap-1.5 font-bold text-slate-800">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              Certified Connectors:
             </span>
-            <span className="text-[12.5px] text-slate-500 hidden md:inline">
-              Demand → Inventory → Replenishment → Logistics → Margin → Customer Experience
+            <span className="text-slate-500">
+              SAP S/4HANA • Oracle Retail • Blue Yonder • Manhattan WMS • Snowflake Data Cloud
             </span>
           </div>
 
-          <div className="text-[12px] font-semibold text-slate-500">
-            THEME 2: AI for Business • Retail & CPG Decision Intelligence
+          <div className="flex items-center justify-center gap-3 text-[11.5px] font-semibold text-slate-400">
+            <span className="flex items-center gap-1 text-slate-600">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              SOC-2 Type II Certified
+            </span>
+            <span>•</span>
+            <span className="text-slate-600">99.99% Enterprise SLA</span>
+            <span>•</span>
+            <span className="text-slate-600">Sub-second POS Telemetry</span>
           </div>
         </div>
       </footer>
