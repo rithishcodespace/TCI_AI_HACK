@@ -28,16 +28,16 @@ export default function App() {
 
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
-      <div className={`bg-white ${currentView === 'auth' ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
+      <div className="min-h-screen bg-white">
         {currentView === 'landing' && (
-          <LandingPage 
+          <LandingPage
             onLoginClick={() => handleOpenAuth('signin')}
             onSignupClick={() => handleOpenAuth('signup')}
           />
         )}
 
         {currentView === 'auth' && (
-          <AuthPage 
+          <AuthPage
             initialMode={authMode}
             onAuthSuccess={handleAuthSuccess}
             onBackToHome={() => setCurrentView('landing')}
@@ -45,7 +45,7 @@ export default function App() {
         )}
 
         {currentView === 'dashboard' && (
-          <Dashboard 
+          <Dashboard
             currentUser={currentUser}
             onBackToLanding={() => setCurrentView('landing')}
           />
