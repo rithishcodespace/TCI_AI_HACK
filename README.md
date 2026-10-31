@@ -122,18 +122,41 @@ Raw enterprise POS feeds are frequently corrupt or incomplete. RetailSense embed
 
 ---
 
-## 📱 Multi-Channel Action Execution
+## 📱 Multi-Channel Action Execution & Live Decision Studio
 
-1. **Executive Decision Console**:
-   - Ranked candidate action cards with high/medium confidence scores.
-   - 1-click **Approve**, **Modify Quantity**, or **Reject** workflows with human-in-the-loop oversight.
-   - Live SKU Risk Board mapping days of cover against supplier lead times.
-   - Interactive backtesting replay charts comparing AI vs Baseline stockout trajectories.
-2. **WhatsApp Bot Simulator**:
+1. **Live Decision Intelligence Studio (9 Signals → 6 Stages)**:
+   - Interactive workbench allowing operators to tune all 9 real-world enterprise signals live.
+   - Real-time execution of the 6-stage lifecycle: **Observe → Predict → Reason → Decide → Act → Measure**.
+   - Outputs one of the 7 canonical actions with action rationale, connected decision chain ripple narrative, and side-by-side comparison with the traditional forecasting baseline.
+   - 1-click **Commit & Dispatch Live Decision** workflow pushing authorized orders into the PO queue.
+
+2. **Groq LLM Connected Decision Chain Copilot (`qwen/qwen3.8-27b`)**:
+   - **Explain with AI**: Natural language synthesis of multi-signal enterprise tradeoffs across `Demand → Inventory → Replenishment → Logistics → Margin → Customer Experience`.
+   - **AI What-If Copilot**: Simulates supply chain shocks (e.g. monsoon delays + marathon footfall) with rupee-quantified business outcomes.
+
+3. **4 Role-Adaptive Enterprise Workspaces**:
+   - **Store Manager** (*Priya Sharma*): Store floor prescriptions, shelf stockout triage, backtest proof, interactive WhatsApp simulator, and floor staff execution checklist.
+   - **Supply Chain Lead** (*Marcus Vance*): District lateral store-to-store transfers (4-hour transit), Central DC capacity slotting, and Supplier OTIF reliability scorecards.
+   - **Category Lead** (*Elena Rostova*): Dynamic markdown elasticity optimizer slider, promo dampener, brand substitution matrix, and competitor price matching.
+   - **Executive Cockpit** (*David Sterling*): Omnichannel performance cockpit, district network heatmaps, and Connected Decision Chain ripple simulator.
+
+4. **WhatsApp Bot Simulator**:
    - Interactive conversational bot simulation (`/api/v1/whatsapp/chat`).
-   - Push stockout alerts directly to store managers with quick-tap ordering commands (`Approve`).
-3. **Purchase Order Exporter**:
+   - Push stockout alerts directly to store managers with quick-tap ordering commands (`Approve` / `Reject`).
+
+5. **Purchase Order Exporter**:
    - 1-click CSV export of approved purchase orders ready for ERP ingestion (`/api/v1/export/purchase-orders`).
+
+---
+
+## 👥 Demo Enterprise Personas & Credentials
+
+| Role | Persona | Email | Password | Primary Workflow |
+| :--- | :--- | :--- | :--- | :--- |
+| **Store Manager** | Priya Sharma | `manager@retailchain.com` | `Password123!` | Shelf triage, stockouts, staff checklist |
+| **Supply Chain Lead** | Marcus Vance | `supplychain@retailchain.com` | `Password123!` | Lateral transfers, DC slotting, OTIF |
+| **Category Lead** | Elena Rostova | `category@retailchain.com` | `Password123!` | Markdowns, promo dampening, pricing |
+| **Executive VP** | David Sterling | `executive@retailchain.com` | `Password123!` | Omnichannel cockpit, network heatmaps |
 
 ---
 
