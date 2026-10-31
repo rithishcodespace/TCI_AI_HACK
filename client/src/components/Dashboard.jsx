@@ -129,7 +129,9 @@ export default function Dashboard({
       { rec_id: 2, sku: "SKU-8801", name: "Celebration Assorted Gift Box 500g", category: "Packaged & Confectionery", action_type: "markdown", badge: "Markdown", quantity: 185, timing: "Execute today", expected_value: 8420.00, confidence: "high", rationale: "Stock covers 48 days against 14-day target. Shelf life expires in 22 days. A 25% markdown stimulates velocity before write-off.", expected_impact: "Recovers ~₹44,400 capital, preventing ₹8,420 spoilage loss.", alternatives_considered: "Vendor return rejected (30% restocking penalty + freight); do nothing writes off ₹33,300.", status: "pending" },
       { rec_id: 3, sku: "SKU-3110", name: "Refined Sunflower Oil 5L Jar", category: "Edible Oils & Cooking", action_type: "adjust_promotion", badge: "Adjust Promo", quantity: 0, timing: "Effective tomorrow", expected_value: 16800.00, confidence: "medium", rationale: "Current 20% discount is driving depletion 2.4x faster than supplier lead time. Dampening discount to 10% extends cover by 6 days and preserves margin.", expected_impact: "Protects ₹16,800 gross margin while preventing premature stockout.", alternatives_considered: "Rush supplier order (shipping penalty ₹6,000); cancel promo completely.", status: "pending" },
       { rec_id: 4, sku: "SKU-5521", name: "Premium Filter Coffee 500g", category: "Beverages", action_type: "substitute", badge: "Substitute", quantity: 40, timing: "Front endcap today", expected_value: 6200.00, confidence: "high", rationale: "Primary Gourmet Arabica blend is delayed at customs. Cross-merchandise Premium South Indian Filter Coffee as substitute to capture 70% of displaced shoppers.", expected_impact: "Recovers ₹6,200 revenue otherwise lost to competitors.", alternatives_considered: "Leave shelf empty (100% loss); discount unrelated tea.", status: "pending" },
-      { rec_id: 5, sku: "SKU-6033", name: "Citrus Surface Cleaner 2L", category: "Household & Cleaning", action_type: "no_action", badge: "No Action", quantity: 0, timing: "Re-evaluate next cycle", expected_value: 0.00, confidence: "high", rationale: "Inventory cover is 14.2 days, perfectly balanced with the 14-day target buffer. Reorder point not yet triggered.", expected_impact: "Prevents premature capital tie-up; zero holding cost penalty.", alternatives_considered: "Early order placement (violates minimum cashflow thresholds).", status: "approved" }
+      { rec_id: 5, sku: "SKU-6033", name: "Citrus Surface Cleaner 2L", category: "Household & Cleaning", action_type: "no_action", badge: "No Action", quantity: 0, timing: "Re-evaluate next cycle", expected_value: 0.00, confidence: "high", rationale: "Inventory cover is 14.2 days, perfectly balanced with the 14-day target buffer. Reorder point not yet triggered.", expected_impact: "Prevents premature capital tie-up; zero holding cost penalty.", alternatives_considered: "Early order placement (violates minimum cashflow thresholds).", status: "approved" },
+      { rec_id: 6, sku: "SKU-2209", name: "Chakki Fresh Atta 10 kg", category: "Grains & Staples", action_type: "transfer", badge: "Transfer Inventory", quantity: 60, timing: "Transfer today (04:00 PM)", expected_value: 18600.00, confidence: "high", rationale: "Store #101 holds 210 units (14.0 days cover), while neighboring Indiranagar Express Store #103 has depleted to 8 units (1.2 days cover). Transferring 60 units balances district stock in 4 hours without new PO cost.", expected_impact: "Averts stockout at Store #103; frees ₹18,600 working capital at Store #101; transit cost ₹450.", alternatives_considered: "Emergency supplier PO (4 days lead time + ₹3,000 transport); do nothing (Store #103 stocks out).", status: "pending" },
+      { rec_id: 7, sku: "SKU-1044", name: "Pasteurized Whole Milk 1L", category: "Dairy & Fresh", action_type: "increase_allocation", badge: "Increase Allocation", quantity: 80, timing: "Next morning wave (05:30 AM)", expected_value: 12400.00, confidence: "high", rationale: "Bengaluru City Marathon route passes Store #101 this weekend. Demand velocity for fresh dairy and hydration is modeled to lift +45%. Boosting Central DC allocation by 80 units prevents morning rush shelf depletion.", expected_impact: "Protects ₹12,400 weekend revenue; preserves 99.2% customer service availability.", alternatives_considered: "Standard allocation (stockout by 09:30 AM); rush afternoon re-order (high transport penalty).", status: "pending" }
     ]);
   };
 
@@ -329,7 +331,7 @@ export default function Dashboard({
     }
 
     setTimeout(() => {
-      let botReply = "🤖 PulseRetail Bot: Ask 'Which items will run out this week?', 'Show markdowns', or 'What is our service level?'";
+      let botReply = "🤖 RetailSense Bot: Ask 'Which items will run out this week?', 'Show markdowns', or 'What is our service level?'";
       if (userText.toLowerCase().includes('run out') || userText.toLowerCase().includes('stockout')) {
         botReply = "🚨 *Stockout Alert:* Basmati Rice 5kg (2.1 days cover) and Sunflower Oil (3.8 days cover) are at critical risk. Tap [Approve] to order.";
       } else if (userText.toLowerCase().includes('service level')) {
@@ -1192,7 +1194,7 @@ export default function Dashboard({
                     <tr>
                       <th className="py-3.5 px-4">Metric</th>
                       <th className="py-3.5 px-4">Simple Baseline Policy</th>
-                      <th className="py-3.5 px-4">PulseRetail AI Policy</th>
+                      <th className="py-3.5 px-4">RetailSense AI Policy</th>
                       <th className="py-3.5 px-4">Improvement</th>
                       <th className="py-3.5 px-4">Business Realization</th>
                     </tr>
@@ -1285,10 +1287,10 @@ export default function Dashboard({
                 <div className="bg-[#075E54] text-white p-3.5 rounded-t-2xl flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-full bg-emerald-400 text-slate-900 font-bold flex items-center justify-center text-xs shadow-inner">
-                      PR
+                      RS
                     </div>
                     <div>
-                      <div className="text-xs font-bold leading-tight">PulseRetail Store Assistant</div>
+                      <div className="text-xs font-bold leading-tight">RetailSense Store Assistant</div>
                       <div className="text-[10px] text-emerald-200">Online • AI Decision Agent</div>
                     </div>
                   </div>

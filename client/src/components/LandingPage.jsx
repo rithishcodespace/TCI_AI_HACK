@@ -46,10 +46,10 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
           </svg>
           <div className="flex flex-col">
             <span className="text-[21px] font-[800] tracking-tight text-[#0F172A] leading-tight">
-              PulseRetail <span className="text-[#5244E9]">AI</span>
+              RetailSense <span className="text-[#5244E9]">AI</span>
             </span>
             <span className="text-[9.5px] font-[700] text-slate-400 tracking-[0.12em] uppercase leading-tight">
-              CHALLENGE 10 • DECISION INTELLIGENCE
+              THEME 2 • DECISION INTELLIGENCE
             </span>
           </div>
         </div>
@@ -130,7 +130,7 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
             
             <p className="mt-5 text-[16px] text-[#64748B] leading-[1.65] font-normal max-w-[460px]">
               Retail decisions are connected: <span className="font-semibold text-slate-800">Demand → Inventory → Replenishment → Logistics → Margin</span>. 
-              PulseRetail AI goes beyond sales forecasts to tell every store exactly what action to take next, and why.
+              RetailSense AI goes beyond sales forecasts to tell every store exactly what action to take next, and why.
             </p>
 
             {/* Hero CTA Button (Exact Original Style) */}
@@ -504,7 +504,7 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
               Store Decisions Directly on WhatsApp
             </h2>
             <p className="mt-4 text-[15px] text-slate-600 leading-relaxed">
-              Store managers are rarely in front of a computer. PulseRetail delivers decision cards directly to their phones with 1-tap Approve, Modify, and Reject triggers.
+              Store managers are rarely in front of a computer. RetailSense delivers decision cards directly to their phones with 1-tap Approve, Modify, and Reject triggers.
             </p>
             <div className="mt-6 space-y-3 text-xs text-slate-700">
               <div className="flex items-center gap-2">
@@ -529,10 +529,10 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
           <div className="w-full max-w-sm rounded-[32px] bg-slate-900 p-3 shadow-xl border-4 border-slate-800">
             <div className="bg-[#075E54] text-white p-3 rounded-t-2xl flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-emerald-400 text-slate-900 font-bold flex items-center justify-center text-xs">
-                PR
+                RS
               </div>
               <div>
-                <div className="text-xs font-bold">PulseRetail Assistant</div>
+                <div className="text-xs font-bold">RetailSense Assistant</div>
                 <div className="text-[10px] text-emerald-200">Online • AI Decision Agent</div>
               </div>
             </div>
@@ -566,8 +566,8 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
       <footer className="mt-auto bg-white border-t border-slate-100 py-8 px-6 sm:px-12 text-center text-xs text-slate-400">
         <div className="max-w-[1360px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 font-bold text-slate-800 text-sm">
-            <span>PulseRetail AI</span>
-            <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded">Challenge 10</span>
+            <span>RetailSense AI</span>
+            <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded">Theme 2</span>
           </div>
           <div>Autonomous Retail Decision Intelligence • Observe → Predict → Reason → Decide → Act → Measure</div>
         </div>

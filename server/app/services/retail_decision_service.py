@@ -339,6 +339,55 @@ class RetailDecisionService:
                 "alternatives_considered": "Early order placement (violates minimum cashflow thresholds).",
                 "status": "approved",
                 "needs_review": False
+            },
+            {
+                "rec_id": 6,
+                "run_id": "run_20261031_080000",
+                "product_id": 2,
+                "sku": "SKU-2209",
+                "name": "Chakki Fresh Atta 10 kg",
+                "category": "Grains & Staples",
+                "action_type": "transfer",
+                "badge": "Transfer Inventory",
+                "quantity": 60,
+                "timing": "Transfer today (04:00 PM transit)",
+                "params": {
+                    "source_store": "Store #101 Metro Central",
+                    "target_store": "Store #103 Indiranagar Express",
+                    "transit_hours": 4,
+                    "transit_cost": 450
+                },
+                "expected_value": 18600.00,
+                "confidence": "high",
+                "rationale": "Store #101 holds 210 units (14.0 days cover), while neighboring Indiranagar Express Store #103 has depleted to 8 units (1.2 days cover). An intra-district cross-dock transfer of 60 units prevents imminent stockout in 4 hours without new PO cost.",
+                "expected_impact": "Averts stockout at Store #103; frees ₹18,600 working capital at Store #101; transit cost ₹450.",
+                "alternatives_considered": "Emergency supplier PO (4 days lead time + ₹3,000 expedited transport); do nothing (Store #103 stocks out Thursday).",
+                "status": "pending",
+                "needs_review": False
+            },
+            {
+                "rec_id": 7,
+                "run_id": "run_20261031_080000",
+                "product_id": 3,
+                "sku": "SKU-1044",
+                "name": "Pasteurized Whole Milk 1L",
+                "category": "Dairy & Fresh",
+                "action_type": "increase_allocation",
+                "badge": "Increase Allocation",
+                "quantity": 80,
+                "timing": "Next morning delivery wave (05:30 AM)",
+                "params": {
+                    "target_increase_pct": 40,
+                    "event": "Bengaluru City Marathon",
+                    "channel": "High-Density Express"
+                },
+                "expected_value": 12400.00,
+                "confidence": "high",
+                "rationale": "Bengaluru City Marathon route passes Store #101 this weekend. Demand velocity for fresh dairy and grab-and-go hydration is modeled to lift +45%. Increasing Central DC allocation by 80 units prevents morning rush shelf depletion.",
+                "expected_impact": "Protects ₹12,400 in weekend morning sales; preserves 99.2% customer service availability.",
+                "alternatives_considered": "Standard allocation (stockout by 09:30 AM); rush afternoon re-order (high transport penalty).",
+                "status": "pending",
+                "needs_review": False
             }
         ]
 
@@ -599,7 +648,7 @@ class RetailDecisionService:
             )
         else:
             reply = (
-                f"🤖 *PulseRetail AI Bot*\n\n"
+                f"🤖 *RetailSense AI Bot*\n\n"
                 "I understand commands such as:\n"
                 "• *'Which items will run out this week?'*\n"
                 "• *'Show excess inventory'* or *'Markdowns'*\n"

@@ -13,7 +13,12 @@ class DecisionRequest(BaseModel):
     reason: Optional[str] = ""
 
 class ChatRequest(BaseModel):
-    message: str
+    message: Optional[str] = None
+    text: Optional[str] = None
+
+    @property
+    def query(self) -> str:
+        return self.message or self.text or ""
 
 @router.get("/dashboard/kpis")
 async def get_dashboard_kpis():
@@ -62,13 +67,13 @@ async def trigger_pipeline_run():
         "status": "completed",
         "run_id": run_id,
         "engine_version": "v2.4.0-cpg",
-        "summary": "Data cleaned, lost demand estimated for 2 SKUs, probabilistic P10-P90 forecast generated, 5 candidate decisions ranked."
+        "summary": "Data cleaned, lost demand reconstructed for 2 SKUs, probabilistic P10-P90 forecasts generated, 7 canonical candidate decisions ranked."
     }
 
 @router.post("/whatsapp/chat")
 async def whatsapp_chat_simulator(req: ChatRequest):
     """Interactive demo endpoint for the WhatsApp bot simulator."""
-    return retail_service.handle_whatsapp_message(req.message)
+    return retail_service.handle_whatsapp_message(req.query)
 
 @router.get("/whatsapp/webhook")
 async def meta_whatsapp_webhook_verify(
