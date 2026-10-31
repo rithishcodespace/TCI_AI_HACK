@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import Plotly from 'plotly.js-dist-min';
 
 export default function PlotlyChart({ data, layout, config, style, className }) {

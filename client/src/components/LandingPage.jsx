@@ -1,25 +1,14 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
-  ChevronDown, 
   Menu,
   X,
   Sparkles,
-  ArrowRight,
-  CheckCircle2,
-  AlertTriangle,
-  Store,
-  Layers,
   MessageSquare,
-  BarChart3,
-  TrendingUp,
-  Tag,
-  Package,
   Check
 } from 'lucide-react';
 
 export default function LandingPage({ onLoginClick, onSignupClick }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [selectedDemoTab, setSelectedDemoTab] = useState('decide');
 
   return (
     <div className="min-h-screen bg-white text-slate-900 flex flex-col justify-between selection:bg-indigo-100 selection:text-indigo-900 font-sans antialiased overflow-x-hidden">

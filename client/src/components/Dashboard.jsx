@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   LayoutGrid, 
   Sparkles, 
@@ -7,28 +7,24 @@ import {
   ChevronDown, 
   Menu, 
   X, 
-  CreditCard,
-  LogOut,
-  Settings,
-  User,
-  ArrowLeft,
-  Store,
-  AlertTriangle,
-  TrendingUp,
-  Percent,
-  Calendar,
-  Plus,
-  RefreshCw,
-  Download,
-  Check,
-  Send,
-  CheckCircle2,
-  Package,
-  Layers,
-  ShieldAlert,
-  MessageSquare,
-  Info,
-  Zap
+  LogOut, 
+  Settings, 
+  User, 
+  Store, 
+  AlertTriangle, 
+  TrendingUp, 
+  Percent, 
+  Calendar, 
+  Plus, 
+  RefreshCw, 
+  Download, 
+  Check, 
+  Send, 
+  CheckCircle2, 
+  ShieldAlert, 
+  MessageSquare, 
+  Info, 
+  Zap 
 } from 'lucide-react';
 import PlotlyChart from './PlotlyChart';
 
@@ -42,7 +38,7 @@ export default function Dashboard({
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
-  const [dateRange, setDateRange] = useState('25 Jul - 25 Aug');
+  const [dateRange] = useState('25 Jul - 25 Aug');
   const [demandChartType, setDemandChartType] = useState('orders'); // 'orders' | 'sales'
   
   // Data States
@@ -93,26 +89,7 @@ export default function Dashboard({
 
   const currentRoleLabel = roleLabels[currentUser.role] || currentUser.role || 'Store Manager';
   const initial = (currentUser.name || 'A').charAt(0).toUpperCase();
-
-  // Close mobile drawer on resize
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setIsMobileMenuOpen(false);
-      }
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Fetch backend data
-  useEffect(() => {
-    fetchKpis();
-    fetchRecommendations();
-    fetchRiskBoard();
-    fetchBacktest();
-    fetchDataIssues();
-  }, []);
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8001/api/v1';
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -121,12 +98,14 @@ export default function Dashboard({
 
   const fetchKpis = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/v1/dashboard/kpis');
+      const res = await fetch(`${API_BASE}/dashboard/kpis`);
       if (res.ok) {
         setKpis(await res.json());
         return;
       }
-    } catch (e) {}
+    } catch (err) {
+      console.warn('KPI fetch note:', err);
+    }
     setKpis({
       service_level: { value: "96.8%", target: "95.0%", change: "+2.4%", favorable: true, subtitle: "5,120 orders fulfilled" },
       stockout_risk: { value: "₹38,000", items_count: 2, change: "-42.1%", favorable: true, subtitle: "2 critical SKUs need PO" },
@@ -138,12 +117,14 @@ export default function Dashboard({
 
   const fetchRecommendations = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/v1/recommendations');
+      const res = await fetch(`${API_BASE}/recommendations`);
       if (res.ok) {
         setRecommendations(await res.json());
         return;
       }
-    } catch (e) {}
+    } catch (err) {
+      console.warn('Recommendations fetch note:', err);
+    }
     setRecommendations([
       { rec_id: 1, sku: "SKU-4412", name: "Royal Basmati Rice 5 kg", category: "Grains & Staples", action_type: "replenish", badge: "Replenish", quantity: 120, timing: "Order by Tuesday", expected_value: 38000.00, confidence: "high", rationale: "Stock covers 2.1 days, supplier takes 6 days, festival promotion raises demand ~35%, so a stockout is likely on Thursday.", expected_impact: "Avoids ~₹38,000 in lost sales; order cost ₹4,500.", alternatives_considered: "Transfer (no second store); markdown not applicable; do nothing loses ~₹38,000.", status: "pending" },
       { rec_id: 2, sku: "SKU-8801", name: "Celebration Assorted Gift Box 500g", category: "Packaged & Confectionery", action_type: "markdown", badge: "Markdown", quantity: 185, timing: "Execute today", expected_value: 8420.00, confidence: "high", rationale: "Stock covers 48 days against 14-day target. Shelf life expires in 22 days. A 25% markdown stimulates velocity before write-off.", expected_impact: "Recovers ~₹44,400 capital, preventing ₹8,420 spoilage loss.", alternatives_considered: "Vendor return rejected (30% restocking penalty + freight); do nothing writes off ₹33,300.", status: "pending" },
@@ -155,12 +136,14 @@ export default function Dashboard({
 
   const fetchRiskBoard = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/v1/inventory/risk-board');
+      const res = await fetch(`${API_BASE}/inventory/risk-board`);
       if (res.ok) {
         setRiskBoard(await res.json());
         return;
       }
-    } catch (e) {}
+    } catch (err) {
+      console.warn('Risk board fetch note:', err);
+    }
     setRiskBoard([
       { product_id: 1, sku: "SKU-4412", name: "Royal Basmati Rice 5 kg", category: "Grains & Staples", on_hand: 38, daily_demand: 18.0, lead_time_days: 6.0, days_of_cover: 2.1, reorder_point: 144, risk_type: "Critical Stockout", risk_score: 92, days_to_expiry: 320, supplier: "Bharat Agro" },
       { product_id: 4, sku: "SKU-8801", name: "Celebration Gift Box 500g", category: "Confectionery", on_hand: 240, daily_demand: 5.0, lead_time_days: 7.0, days_of_cover: 48.0, reorder_point: 45, risk_type: "Excess / Expiry", risk_score: 78, days_to_expiry: 22, supplier: "Mondelez India" },
@@ -172,12 +155,14 @@ export default function Dashboard({
 
   const fetchBacktest = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/v1/backtest');
+      const res = await fetch(`${API_BASE}/backtest`);
       if (res.ok) {
         setBacktest(await res.json());
         return;
       }
-    } catch (e) {}
+    } catch (err) {
+      console.warn('Backtest fetch note:', err);
+    }
     setBacktest({
       summary: { period: "Last 6 Weeks Holdout Replay", sku_count: 120, ai_roi_multiple: "4.8x", annualized_savings: "₹4,12,000" },
       comparison: [
@@ -199,26 +184,80 @@ export default function Dashboard({
 
   const fetchDataIssues = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/v1/data-quality');
+      const res = await fetch(`${API_BASE}/data-quality`);
       if (res.ok) {
         setDataIssues(await res.json());
         return;
       }
-    } catch (e) {}
+    } catch (err) {
+      console.warn('Data issues fetch note:', err);
+    }
     setDataIssues([
       { issue_id: 1, sku: "SKU-4412", name: "Royal Basmati Rice 5 kg", issue_type: "zero_stock_lost_demand", severity: "critical", details: "SKU-4412 had 2 zero-stock days last week. Recorded 0 sales was unconstrained lost demand (~42 units); unobserved demand reconstructed." },
       { issue_id: 2, sku: "SKU-8801", name: "Celebration Gift Box 500g", issue_type: "negative_stock_anomaly", severity: "warning", details: "Dirty POS sync recorded -3 on_hand. Automatically clamped to 0 and flagged in quality audit ledger." }
     ]);
   };
 
+  // Close mobile drawer on resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Fetch backend data on mount
+  useEffect(() => {
+    let ignore = false;
+    const loadInitialData = async () => {
+      try {
+        const [kpiRes, recRes, riskRes, backtestRes, dqRes] = await Promise.allSettled([
+          fetch(`${API_BASE}/dashboard/kpis`),
+          fetch(`${API_BASE}/recommendations`),
+          fetch(`${API_BASE}/inventory/risk-board`),
+          fetch(`${API_BASE}/backtest`),
+          fetch(`${API_BASE}/data-quality`),
+        ]);
+
+        if (!ignore && kpiRes.status === 'fulfilled' && kpiRes.value.ok) {
+          setKpis(await kpiRes.value.json());
+        }
+        if (!ignore && recRes.status === 'fulfilled' && recRes.value.ok) {
+          setRecommendations(await recRes.value.json());
+        }
+        if (!ignore && riskRes.status === 'fulfilled' && riskRes.value.ok) {
+          setRiskBoard(await riskRes.value.json());
+        }
+        if (!ignore && backtestRes.status === 'fulfilled' && backtestRes.value.ok) {
+          setBacktest(await backtestRes.value.json());
+        }
+        if (!ignore && dqRes.status === 'fulfilled' && dqRes.value.ok) {
+          setDataIssues(await dqRes.value.json());
+        }
+      } catch (err) {
+        console.warn('Initial data load note:', err);
+      }
+    };
+
+    loadInitialData();
+    return () => {
+      ignore = true;
+    };
+  }, [API_BASE]);
+
   const handleDecide = async (recId, decisionType, editedQty = null, reason = "") => {
     try {
-      await fetch(`http://localhost:8000/api/v1/recommendations/${recId}/decide`, {
+      await fetch(`${API_BASE}/recommendations/${recId}/decide`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ decision: decisionType, edited_quantity: editedQty, reason })
       });
-    } catch (e) {}
+    } catch (err) {
+      console.warn('Decide action error:', err);
+    }
 
     setRecommendations(prev => prev.map(r => {
       if (r.rec_id === recId) {
@@ -245,8 +284,10 @@ export default function Dashboard({
   const handleRunPipeline = async () => {
     setIsEngineRunning(true);
     try {
-      await fetch('http://localhost:8000/api/v1/pipeline/run', { method: 'POST' });
-    } catch (e) {}
+      await fetch(`${API_BASE}/pipeline/run`, { method: 'POST' });
+    } catch (err) {
+      console.warn('Pipeline run note:', err);
+    }
 
     setTimeout(() => {
       setIsEngineRunning(false);
@@ -254,6 +295,8 @@ export default function Dashboard({
       fetchKpis();
       fetchRecommendations();
       fetchRiskBoard();
+      fetchBacktest();
+      fetchDataIssues();
     }, 1000);
   };
 
@@ -272,7 +315,7 @@ export default function Dashboard({
     setChatMessages(prev => [...prev, newMsg]);
 
     try {
-      const res = await fetch('http://localhost:8000/api/v1/whatsapp/chat', {
+      const res = await fetch(`${API_BASE}/whatsapp/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userText })
@@ -282,7 +325,9 @@ export default function Dashboard({
         setChatMessages(data.messages);
         return;
       }
-    } catch (e) {}
+    } catch (err) {
+      console.warn('WhatsApp chat note:', err);
+    }
 
     setTimeout(() => {
       let botReply = "🤖 PulseRetail Bot: Ask 'Which items will run out this week?', 'Show markdowns', or 'What is our service level?'";
@@ -308,7 +353,7 @@ export default function Dashboard({
   };
 
   const handleExportCsv = () => {
-    window.open('http://localhost:8000/api/v1/export/purchase-orders', '_blank');
+    window.open(`${API_BASE}/export/purchase-orders`, '_blank');
     showToast("📥 Exporting approved purchase orders as CSV...");
   };
 
