@@ -23,8 +23,7 @@ import {
   CheckCircle2, 
   ShieldAlert, 
   MessageSquare, 
-  Info, 
-  Zap 
+  Info
 } from 'lucide-react';
 import PlotlyChart from './PlotlyChart';
 
@@ -536,20 +535,6 @@ export default function Dashboard({
               })}
             </nav>
           </div>
-
-          {/* Connected Enterprise Chain Pill */}
-          {!isSidebarCollapsed && (
-            <div className="mt-6 p-3.5 rounded-2xl bg-gradient-to-br from-indigo-50/70 to-blue-50/70 border border-indigo-100/80">
-              <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#5244E9] mb-1">
-                <Zap className="w-3.5 h-3.5 fill-[#5244E9]/20" />
-                <span>Connected Decisions</span>
-              </div>
-              <p className="text-[10px] text-slate-500 leading-relaxed">
-                Demand → Inventory → Replenishment → Logistics → Margin → CX
-              </p>
-            </div>
-          )}
-
         </div>
 
         {/* Back to landing page */}

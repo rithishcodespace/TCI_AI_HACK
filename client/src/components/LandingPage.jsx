@@ -4,7 +4,9 @@ import {
   X,
   Sparkles,
   MessageSquare,
-  Check
+  Check,
+  Bell,
+  Share2
 } from 'lucide-react';
 
 export default function LandingPage({ onLoginClick, onSignupClick }) {
@@ -122,7 +124,7 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
             
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EEF4FF] text-[#5244E9] text-[12px] font-semibold mb-5 border border-indigo-100">
               <Sparkles className="w-3.5 h-3.5 text-[#5244E9]" />
-              <span>Theme 2: AI for Business (Retail / CPG)</span>
+              <span>AI Decision Intelligence • Retail & CPG</span>
             </div>
 
             <h1 className="text-[38px] sm:text-[48px] lg:text-[50px] font-[800] text-[#0F172A] tracking-[-0.03em] leading-[1.12]">
@@ -181,133 +183,236 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
 
           </div>
 
-          {/* Right Hero Visuals / Platform Mockup (Original Layout Restored) */}
-          <div className="lg:col-span-7 relative w-full flex items-center justify-center lg:justify-end pt-2 pb-10">
+          {/* Right Hero Visuals / Platform Mockup (Exact Match to Reference Image with Retail Content) */}
+          <div className="lg:col-span-7 relative w-full flex items-center justify-center lg:justify-end pt-4 pb-14 sm:pb-16">
             
             {/* Ambient Radial Glow */}
-            <div className="absolute w-[500px] h-[400px] bg-gradient-to-tr from-indigo-100/50 via-purple-50/40 to-transparent rounded-full blur-3xl -z-10 pointer-events-none" />
+            <div className="absolute w-[520px] h-[420px] bg-gradient-to-tr from-indigo-100/60 via-purple-50/50 to-blue-50/30 rounded-full blur-3xl -z-10 pointer-events-none" />
 
-            {/* Main Application Container */}
-            <div className="relative w-full max-w-[620px] bg-white rounded-2xl border border-slate-200/80 shadow-[0_20px_50px_rgba(15,23,42,0.06)] overflow-visible">
+            {/* Main Platform Card (Matching Reference Layout) */}
+            <div className="relative w-full max-w-[580px] bg-white rounded-3xl border border-slate-200/90 shadow-[0_20px_60px_-15px_rgba(15,23,42,0.08)] p-6 sm:p-7 select-none">
               
-              <div className="grid grid-cols-12 min-h-[380px]">
+              <div className="grid grid-cols-12 gap-5 items-start">
                 
-                {/* Left Panel: Decision Engine Signals */}
-                <div className="col-span-5 p-5 border-r border-slate-100 flex flex-col bg-white rounded-l-2xl">
-                  <h3 className="text-[16px] font-bold text-slate-900 tracking-tight mb-3">
-                    Store Signals
+                {/* Left Column: Taxonomy & Hierarchy */}
+                <div className="col-span-12 sm:col-span-5 pr-1">
+                  
+                  <h3 className="text-[18px] font-extrabold text-[#0F172A] tracking-tight">
+                    Taxonomy
                   </h3>
 
-                  {/* Signal Stats */}
-                  <div className="grid grid-cols-2 gap-2 pb-4 mb-4 border-b border-slate-100">
+                  {/* Dual Metric Counters */}
+                  <div className="grid grid-cols-2 gap-3 mt-3 pb-4">
                     <div>
-                      <div className="text-[10px] text-slate-400 font-medium">Monitored SKUs</div>
-                      <div className="text-[15px] font-bold text-slate-800 mt-0.5">120 Items</div>
+                      <div className="text-[10.5px] text-slate-400 font-medium">Total SKUs</div>
+                      <div className="text-[18px] font-extrabold text-[#0F172A] tracking-tight mt-0.5">245,234</div>
                     </div>
                     <div>
-                      <div className="text-[10px] text-slate-400 font-medium">At Risk Today</div>
-                      <div className="text-[15px] font-bold text-rose-600 mt-0.5">2 Critical</div>
+                      <div className="text-[10.5px] text-slate-400 font-medium">Analyzed Issues</div>
+                      <div className="text-[18px] font-extrabold text-[#0F172A] tracking-tight mt-0.5">135</div>
                     </div>
                   </div>
 
-                  {/* Stepper Navigation */}
-                  <div className="space-y-2 text-[11px] font-medium text-slate-600">
+                  {/* Tree Hierarchy */}
+                  <div className="space-y-2 pt-1">
                     
-                    <div className="border border-[#7C3AED] bg-[#FBF9FE] text-slate-800 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-[0_1px_3px_rgba(124,58,237,0.08)]">
-                      <span className="text-[10px] text-[#7C3AED] font-bold">●</span>
-                      <span className="text-[11px] font-semibold text-slate-800">1. Observe & Reconstruct</span>
+                    {/* Active Root Node (Purple Border Card) */}
+                    <div className="border-2 border-[#7C3AED] bg-white rounded-xl p-2.5 flex items-center gap-2 shadow-xs">
+                      <div className="w-5 h-5 rounded-md border border-[#7C3AED]/40 bg-[#F5F3FF] flex items-center justify-center text-[#7C3AED]">
+                        <svg className="w-3 h-3" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2">
+                          <rect x="2" y="2" width="12" height="12" rx="2" />
+                          <path d="M8 2v12M2 8h12" />
+                        </svg>
+                      </div>
+                      <span className="text-[12px] font-bold text-slate-900 tracking-tight">
+                        Store Replenishment
+                      </span>
                     </div>
 
-                    <div className="border border-slate-200/90 bg-white px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 text-slate-700">
-                      <span className="text-[10px] text-slate-400">●</span>
-                      <span>2. Predict (P10–P90)</span>
+                    {/* Tree Branch Connectors */}
+                    <div className="relative pl-5 pt-1 space-y-2">
+                      {/* Vertical dotted connector */}
+                      <div className="absolute left-2.5 top-0 bottom-4 w-px border-l-2 border-dotted border-slate-300" />
+                      
+                      {/* Level 2 Sub-node */}
+                      <div className="relative flex items-center">
+                        <div className="absolute -left-2.5 top-1/2 w-2.5 border-t-2 border-dotted border-slate-300" />
+                        <div className="border border-slate-200 bg-white rounded-lg px-2.5 py-1 flex items-center gap-1.5 text-[11px] font-semibold text-slate-700 shadow-2xs">
+                          <span className="text-slate-400 text-[10px]">›</span>
+                          <span>Safety Stock Buffer</span>
+                        </div>
+                      </div>
+
+                      {/* Level 3 Sub-node */}
+                      <div className="relative pl-4 flex items-center">
+                        <div className="absolute left-1.5 top-0 bottom-1/2 w-px border-l-2 border-dotted border-slate-300" />
+                        <div className="absolute left-1.5 top-1/2 w-2 border-t-2 border-dotted border-slate-300" />
+                        <div className="border border-slate-200 bg-white rounded-lg px-2 py-0.5 flex items-center gap-1 text-[10.5px] font-medium text-slate-600 shadow-2xs">
+                          <span className="text-slate-400 text-[9px]">›</span>
+                          <span>Expedited PO</span>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="border border-slate-200/90 bg-white px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 text-slate-700">
-                      <span className="text-[10px] text-slate-400">●</span>
-                      <span>3. Reason & Guardrails</span>
+                    {/* Unselected Node 2 */}
+                    <div className="border border-slate-200/90 bg-white hover:bg-slate-50/60 rounded-xl p-2.5 flex items-center gap-2 text-slate-700 font-semibold text-[11.5px] shadow-2xs mt-3 transition-colors">
+                      <span className="text-slate-400 text-[12px] font-bold leading-none">›</span>
+                      <span>Dynamic Markdowns</span>
                     </div>
 
-                    <div className="border border-[#5244E9] bg-[#EEF4FF] text-[#5244E9] px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 font-bold shadow-xs">
-                      <span className="text-[10px] text-[#5244E9]">●</span>
-                      <span>4. Ranked Actions</span>
-                    </div>
-
-                    <div className="border border-slate-200/90 bg-white px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 text-slate-700">
-                      <span className="text-[10px] text-slate-400">●</span>
-                      <span>5. Web & WhatsApp</span>
-                    </div>
-
-                    <div className="border border-slate-200/90 bg-white px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 text-slate-700">
-                      <span className="text-[10px] text-slate-400">●</span>
-                      <span>6. Backtest Verification</span>
+                    {/* Unselected Node 3 */}
+                    <div className="border border-slate-200/90 bg-white hover:bg-slate-50/60 rounded-xl p-2.5 flex items-center gap-2 text-slate-700 font-semibold text-[11.5px] shadow-2xs transition-colors">
+                      <span className="text-slate-400 text-[12px] font-bold leading-none">›</span>
+                      <span>Inter-Store Transfers</span>
                     </div>
 
                   </div>
                 </div>
 
-                {/* Right Panel: Live Action Card Mockup */}
-                <div className="col-span-7 p-5 flex flex-col justify-between bg-[#FAFAFC] rounded-r-2xl">
+                {/* Right Column: Prescriptions Table / Cards */}
+                <div className="col-span-12 sm:col-span-7 sm:border-l sm:border-slate-100 sm:pl-5">
                   
-                  <div>
-                    <div className="flex items-center justify-between pb-3 border-b border-slate-200/60">
-                      <div className="flex items-center gap-1.5">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#EEF4FF] text-[#5244E9] uppercase">
-                          Action #1 • Replenish
+                  {/* Top Channel Header + Share Button */}
+                  <div className="flex items-center justify-between pb-3">
+                    <div className="flex items-center gap-1.5 text-[14px] font-bold text-slate-900">
+                      <span className="text-slate-400 font-normal">#</span>
+                      <span>Store Replenishment</span>
+                    </div>
+                    <button 
+                      onClick={onSignupClick}
+                      className="bg-[#5244E9] hover:bg-[#4333DE] text-white px-3 py-1.5 rounded-xl text-[11px] font-semibold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                      <span>Share</span>
+                    </button>
+                  </div>
+
+                  {/* Tabs Row with underline */}
+                  <div className="flex items-center gap-4 border-b border-slate-100 pb-2">
+                    <button className="text-[12px] font-bold text-slate-900 border-b-2 border-slate-900 pb-2 -mb-[9px]">
+                      All feedback (42,430)
+                    </button>
+                    <button className="text-[11.5px] text-slate-400 font-normal pb-2">
+                      Not classified 1,273 (3%)
+                    </button>
+                  </div>
+
+                  {/* Stacked Cards with Skeleton Lines */}
+                  <div className="space-y-2.5 mt-3">
+                    
+                    {/* Issue-1 */}
+                    <div className="bg-[#FAFBFD] border border-slate-100 rounded-2xl p-3 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10.5px] font-bold text-[#5244E9] bg-indigo-50/90 px-2 py-0.5 rounded-md">
+                          Issue-1
                         </span>
+                        <span className="text-slate-300 tracking-widest text-[13px] font-bold">••</span>
                       </div>
-                      <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                        High Confidence
-                      </span>
+                      <div className="h-2 bg-slate-200/80 rounded-full w-[88%] mt-2.5" />
+                      <div className="h-2 bg-slate-100 rounded-full w-[60%] mt-1.5" />
                     </div>
 
-                    <div className="mt-3">
-                      <div className="text-[14px] font-bold text-slate-900">Royal Basmati Rice 5 kg</div>
-                      <div className="text-[10px] text-slate-400 font-mono">SKU-4412 • Grains & Staples</div>
-                    </div>
-
-                    {/* Metric Pills */}
-                    <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
-                      <div className="bg-white p-2 rounded-lg border border-slate-200/80">
-                        <span className="text-slate-400 block text-[9.5px]">Stock Cover</span>
-                        <span className="font-bold text-rose-600">2.1 Days</span>
+                    {/* Issue-2 */}
+                    <div className="bg-[#FAFBFD] border border-slate-100 rounded-2xl p-3 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10.5px] font-bold text-[#5244E9] bg-indigo-50/90 px-2 py-0.5 rounded-md">
+                          Issue-2
+                        </span>
+                        <span className="text-slate-300 tracking-widest text-[13px] font-bold">••</span>
                       </div>
-                      <div className="bg-white p-2 rounded-lg border border-slate-200/80">
-                        <span className="text-slate-400 block text-[9.5px]">Supplier Lead</span>
-                        <span className="font-bold text-slate-800">6 Days (MOQ 50)</span>
+                      <div className="h-2 bg-slate-200/80 rounded-full w-[92%] mt-2.5" />
+                      <div className="h-2 bg-slate-100 rounded-full w-[45%] mt-1.5" />
+                    </div>
+
+                    {/* Issue-3 */}
+                    <div className="bg-[#FAFBFD] border border-slate-100 rounded-2xl p-3 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10.5px] font-bold text-[#5244E9] bg-indigo-50/90 px-2 py-0.5 rounded-md">
+                          Issue-3
+                        </span>
+                        <span className="text-slate-300 tracking-widest text-[13px] font-bold">••</span>
                       </div>
+                      <div className="h-2 bg-slate-200/80 rounded-full w-[76%] mt-2.5" />
                     </div>
 
-                    {/* Reasoning box */}
-                    <div className="mt-3 p-2.5 rounded-xl bg-white border border-slate-200/80 text-[10.5px] text-slate-600 leading-snug">
-                      <b className="text-slate-900">Why: </b>
-                      Festival promo increases demand ~35%, causing empty shelves by Thursday. Order <b>120 units by Tuesday</b>.
-                    </div>
-
-                    <div className="mt-2 text-[10px] text-emerald-600 font-semibold">
-                      Expected Value: Avoids ₹38,000 lost margin
-                    </div>
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="mt-4 pt-3 border-t border-slate-200/60 flex items-center justify-between">
-                    <span className="text-[10px] text-slate-400">Human Approval:</span>
-                    <div className="flex items-center gap-2">
-                      <button 
-                        onClick={onLoginClick}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-1.5 rounded-lg text-[11px] shadow-sm transition-all"
-                      >
-                        Approve Order
-                      </button>
-                      <button 
-                        onClick={onLoginClick}
-                        className="bg-white border border-slate-200 text-slate-700 font-medium px-2.5 py-1.5 rounded-lg text-[11px]"
-                      >
-                        Modify
-                      </button>
-                    </div>
+                </div>
+
+              </div>
+
+              {/* Floating Overlay Card 1: Bottom Left Alert */}
+              <div className="absolute -bottom-8 -left-4 sm:-left-8 bg-white rounded-2xl p-3.5 sm:p-4 shadow-[0_18px_40px_rgba(15,23,42,0.12)] border border-slate-100 max-w-[290px] sm:max-w-[310px] z-20">
+                {/* Yellow Bell Floating Circle */}
+                <div className="absolute -top-3.5 -left-3.5 w-8 h-8 rounded-full bg-amber-100/90 border-2 border-white flex items-center justify-center shadow-xs">
+                  <Bell className="w-4 h-4 text-amber-600 fill-amber-500/20" />
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-[12.5px] font-bold text-slate-900">
+                    32 negative feedback
+                  </span>
+                  <span className="bg-indigo-50 text-[#5244E9] text-[10.5px] font-bold px-1.5 py-0.5 rounded">
+                    ↑ 56%
+                  </span>
+                </div>
+
+                <p className="mt-2 text-[10.5px] text-slate-500 leading-snug">
+                  "Support staff was very supportive and professional, <span className="text-rose-600 bg-rose-50 px-1 py-0.5 rounded font-semibold">but the app crashes ...</span>"
+                </p>
+              </div>
+
+              {/* Floating Overlay Card 2: Bottom Right Progress Bars */}
+              <div className="absolute -bottom-10 -right-2 sm:-right-6 bg-white rounded-2xl p-3.5 sm:p-4 shadow-[0_18px_40px_rgba(15,23,42,0.12)] border border-slate-100 min-w-[260px] sm:min-w-[280px] z-20">
+                {/* Dual Reaction Emoji Badge */}
+                <div className="absolute -top-3.5 right-4 bg-white border border-slate-200 rounded-full px-1.5 py-0.5 flex items-center gap-1 shadow-xs">
+                  <div className="w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[9px] font-bold">
+                    ✓
+                  </div>
+                  <div className="w-4 h-4 rounded-full bg-rose-500 text-white flex items-center justify-center text-[9px] font-bold">
+                    !
+                  </div>
+                </div>
+
+                {/* 3 Horizontal Segmented Multi-Color Progress Bars */}
+                <div className="space-y-2 mt-1">
+                  {/* Bar 1 */}
+                  <div className="h-2.5 rounded-full overflow-hidden flex gap-0.5 bg-slate-100">
+                    <div className="bg-[#F43F5E] h-full rounded-l-full w-[42%]" />
+                    <div className="bg-[#F59E0B] h-full w-[23%]" />
+                    <div className="bg-[#10B981] h-full rounded-r-full w-[35%]" />
                   </div>
 
+                  {/* Bar 2 */}
+                  <div className="h-2.5 rounded-full overflow-hidden flex gap-0.5 bg-slate-100">
+                    <div className="bg-[#F43F5E] h-full rounded-l-full w-[22%]" />
+                    <div className="bg-[#F59E0B] h-full w-[22%]" />
+                    <div className="bg-[#CBD5E1] h-full w-[16%]" />
+                    <div className="bg-[#10B981] h-full rounded-r-full w-[40%]" />
+                  </div>
+
+                  {/* Bar 3 */}
+                  <div className="h-2.5 rounded-full overflow-hidden flex gap-0.5 bg-slate-100">
+                    <div className="bg-[#F43F5E] h-full rounded-l-full w-[16%]" />
+                    <div className="bg-[#F59E0B] h-full w-[16%]" />
+                    <div className="bg-[#10B981] h-full rounded-r-full w-[68%]" />
+                  </div>
+                </div>
+
+                {/* Legend */}
+                <div className="flex items-center justify-between text-[10px] text-slate-500 font-medium px-1 mt-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[#F43F5E]" />
+                    <span>Negative</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[#F59E0B]" />
+                    <span>Neutral</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[#10B981]" />
+                    <span>Positive</span>
+                  </div>
                 </div>
 
               </div>
