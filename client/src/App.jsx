@@ -1,17 +1,21 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import LandingPage from './components/LandingPage';
 import Dashboard from './components/Dashboard';
 import AuthPage from './components/AuthPage';
+import { getStoredUser, clearAuthSession } from './services/auth';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('landing'); // 'landing' | 'auth' | 'dashboard'
   const [authMode, setAuthMode] = useState('signin'); // 'signin' | 'signup'
 
-  const [currentUser, setCurrentUser] = useState({
-    name: 'Rithish',
-    email: 'you@college.edu',
-    role: 'student',
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = getStoredUser();
+    return saved || {
+      name: 'Rithish',
+      email: 'you@college.edu',
+      role: 'student',
+    };
   });
 
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '724191775115-ucph7ka0m8tgnnrm1r2r5gbob92qv5su.apps.googleusercontent.com';
@@ -26,9 +30,19 @@ export default function App() {
     setCurrentView('dashboard');
   };
 
+  const handleLogout = () => {
+    clearAuthSession();
+    setCurrentUser({
+      name: 'Rithish',
+      email: 'you@college.edu',
+      role: 'student',
+    });
+    setCurrentView('landing');
+  };
+
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
-      <div className="min-h-screen bg-white">
+      <div className={`bg-white ${currentView === 'auth' ? 'h-screen overflow-hidden' : 'min-h-screen'}`}>
         {currentView === 'landing' && (
           <LandingPage
             onLoginClick={() => handleOpenAuth('signin')}
@@ -47,7 +61,7 @@ export default function App() {
         {currentView === 'dashboard' && (
           <Dashboard
             currentUser={currentUser}
-            onBackToLanding={() => setCurrentView('landing')}
+            onBackToLanding={handleLogout}
           />
         )}
       </div>

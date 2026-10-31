@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
   X, 
   User, 
@@ -28,7 +28,6 @@ export default function AuthModal({
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState('');
 
-  if (!isOpen) return null;
 
   const roles = [
     {
@@ -113,6 +112,8 @@ export default function AuthModal({
       });
     }, 500);
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">

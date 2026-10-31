@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Users,
   Utensils,
@@ -17,6 +17,7 @@ import {
   X
 } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
+import { saveAuthSession } from '../services/auth';
 
 export default function AuthPage({
   initialMode = 'signin',
@@ -65,9 +66,10 @@ export default function AuthPage({
         const profile = await res.json();
 
         // Sync with backend if available
+        let backendData = null;
         try {
-          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
-          await fetch(`${apiUrl}/auth/google`, {
+          const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001/api/v1';
+          const backendRes = await fetch(`${apiUrl}/auth/google`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -75,25 +77,35 @@ export default function AuthPage({
               role: selectedRole
             })
           });
+          if (backendRes.ok) {
+            backendData = await backendRes.json();
+          }
         } catch (err) {
           console.warn('Backend sync note:', err);
         }
 
-        onAuthSuccess({
+        const authPayload = backendData ? {
+          ...backendData,
+          provider: 'google'
+        } : {
           name: profile.name || 'Google User',
           email: profile.email,
           avatar: profile.picture,
           role: selectedRole,
           provider: 'google',
-        });
+        };
+        saveAuthSession(authPayload);
+        onAuthSuccess(authPayload);
       } catch (err) {
         console.error('Google profile fetch error:', err);
-        onAuthSuccess({
+        const fallbackUser = {
           name: 'Google User',
           email: 'student@college.edu',
           role: selectedRole,
           provider: 'google',
-        });
+        };
+        saveAuthSession(fallbackUser);
+        onAuthSuccess(fallbackUser);
       } finally {
         setIsLoading(false);
       }
@@ -122,7 +134,7 @@ export default function AuthPage({
 
     setIsLoading(true);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001/api/v1';
       const endpoint = mode === 'signin' ? `${apiUrl}/auth/login` : `${apiUrl}/auth/signup`;
       const payload = mode === 'signin'
         ? { email, password, role: selectedRole }
@@ -136,12 +148,16 @@ export default function AuthPage({
 
       if (res.ok) {
         const data = await res.json();
+        saveAuthSession({ ...data, provider: 'credentials' });
         onAuthSuccess({
+          id: data.id,
           name: data.name,
           email: data.email,
           role: data.role,
           avatar: data.avatar,
-          token: data.token,
+          token: data.token || data.access_token,
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
           provider: 'credentials'
         });
         return;
@@ -153,12 +169,14 @@ export default function AuthPage({
     // Local state fallback so user is never blocked
     setTimeout(() => {
       setIsLoading(false);
-      onAuthSuccess({
+      const fallbackUser = {
         name: fullName || (email.split('@')[0] || 'User'),
         email: email,
         role: selectedRole,
         provider: 'credentials',
-      });
+      };
+      saveAuthSession(fallbackUser);
+      onAuthSuccess(fallbackUser);
     }, 400);
   };
 
@@ -527,10 +545,10 @@ export default function AuthPage({
           </div>
         </div>
 
-        {/* Bottom Graphic & Illustrated Scene */}
-        <div className="relative w-full mt-8 flex items-end justify-center">
+        {/* Bottom Graphic & Illustrated Scene - Positioned Up */}
+        <div className="relative w-full mb-8 lg:mb-12 xl:mb-14 -translate-y-4 lg:-translate-y-8 flex items-center justify-center">
 
-          <div className="relative w-full max-w-[440px] h-[260px]">
+          <div className="relative w-full max-w-[400px] h-[230px]">
 
             {/* Floating Utensils Card (Left) */}
             <div className="absolute left-2 top-10 bg-white rounded-2xl p-3 shadow-[0_10px_25px_rgba(37,99,235,0.12)] border border-blue-100 flex items-center justify-center text-blue-600 animate-bounce duration-1000">

@@ -2,7 +2,7 @@ import uuid
 from typing import List
 from sqlalchemy.orm import Session
 from app.models.review import Review as ReviewModel
-from app.schemas.review import ReviewCreate, Review, AnalysisSummary
+from app.schemas.review import ReviewCreate, AnalysisSummary
 
 class ReviewService:
     @staticmethod

@@ -7,71 +7,119 @@ from google.auth.transport import requests as google_requests
 
 from app.core.config import settings
 from app.core.database import get_db
+from app.core.security import (
+    hash_password,
+    verify_password,
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    get_current_user,
+)
 from app.models.user import User
-from app.schemas.auth import LoginRequest, SignupRequest, GoogleAuthRequest, UserResponse
+from app.schemas.auth import (
+    LoginRequest,
+    SignupRequest,
+    GoogleAuthRequest,
+    RefreshTokenRequest,
+    TokenResponse,
+    UserResponse,
+    UserMeResponse,
+)
 
 router = APIRouter()
 
 @router.post("/login", response_model=UserResponse, summary="Sign in with email and password")
 async def login(credentials: LoginRequest, db: Session = Depends(get_db)):
-    # Check if user exists in PostgreSQL
     user = db.query(User).filter(User.email == credentials.email).first()
     
-    if not user:
+    if user:
+        # Verify password if hashed_password is set
+        if user.hashed_password and not verify_password(credentials.password, user.hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        # Update role if selected
+        if credentials.role and credentials.role != user.role:
+            user.role = credentials.role
+            db.commit()
+            db.refresh(user)
+    else:
         # Create user record in PostgreSQL for testing
         user = User(
             id=f"usr_{uuid.uuid4().hex[:8]}",
             name=credentials.email.split("@")[0].capitalize(),
             email=credentials.email,
             role=credentials.role or "student",
-            hashed_password=credentials.password,
+            hashed_password=hash_password(credentials.password),
             provider="credentials"
         )
         db.add(user)
         db.commit()
         db.refresh(user)
 
+    token_data = {
+        "sub": user.id,
+        "email": user.email,
+        "role": user.role
+    }
+    access_token = create_access_token(token_data)
+    refresh_token = create_refresh_token(token_data)
+
     return UserResponse(
         id=user.id,
         name=user.name,
         email=user.email,
-        role=credentials.role or user.role,
+        role=user.role,
         avatar=user.avatar,
-        token=f"jwt_{uuid.uuid4().hex}"
+        token=access_token,
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_type="bearer"
     )
 
 @router.post("/signup", response_model=UserResponse, status_code=status.HTTP_201_CREATED, summary="Register a new account")
 async def signup(data: SignupRequest, db: Session = Depends(get_db)):
     existing = db.query(User).filter(User.email == data.email).first()
     if existing:
-        return UserResponse(
-            id=existing.id,
-            name=existing.name,
-            email=existing.email,
-            role=data.role or existing.role,
-            avatar=existing.avatar,
-            token=f"jwt_{uuid.uuid4().hex}"
+        # If user already exists, update role and issue new tokens
+        if data.role and data.role != existing.role:
+            existing.role = data.role
+            db.commit()
+            db.refresh(existing)
+        user = existing
+    else:
+        user = User(
+            id=f"usr_{uuid.uuid4().hex[:8]}",
+            name=data.fullName,
+            email=data.email,
+            role=data.role or "student",
+            hashed_password=hash_password(data.password),
+            provider="credentials"
         )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
 
-    new_user = User(
-        id=f"usr_{uuid.uuid4().hex[:8]}",
-        name=data.fullName,
-        email=data.email,
-        role=data.role or "student",
-        hashed_password=data.password,
-        provider="credentials"
-    )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    token_data = {
+        "sub": user.id,
+        "email": user.email,
+        "role": user.role
+    }
+    access_token = create_access_token(token_data)
+    refresh_token = create_refresh_token(token_data)
 
     return UserResponse(
-        id=new_user.id,
-        name=new_user.name,
-        email=new_user.email,
-        role=new_user.role,
-        avatar=new_user.avatar,
-        token=f"jwt_{uuid.uuid4().hex}"
+        id=user.id,
+        name=user.name,
+        email=user.email,
+        role=user.role,
+        avatar=user.avatar,
+        token=access_token,
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_type="bearer"
     )
 
 @router.post("/google", response_model=UserResponse, summary="Authenticate via Google OAuth")
@@ -121,12 +169,74 @@ async def google_login(payload: GoogleAuthRequest, db: Session = Depends(get_db)
         db.add(user)
         db.commit()
         db.refresh(user)
+    else:
+        if payload.role and payload.role != user.role:
+            user.role = payload.role
+            db.commit()
+            db.refresh(user)
+
+    token_data = {
+        "sub": user.id,
+        "email": user.email,
+        "role": user.role
+    }
+    access_token = create_access_token(token_data)
+    refresh_token = create_refresh_token(token_data)
 
     return UserResponse(
         id=user.id,
         name=user.name,
         email=user.email,
-        role=payload.role or user.role,
+        role=user.role,
         avatar=user.avatar,
-        token=f"jwt_google_{uuid.uuid4().hex}"
+        token=access_token,
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_type="bearer"
+    )
+
+@router.post("/refresh", response_model=TokenResponse, summary="Refresh JWT access token using refresh token")
+async def refresh_tokens(payload: RefreshTokenRequest, db: Session = Depends(get_db)):
+    """Validates refresh token and issues a new access token and rotated refresh token."""
+    decoded = decode_token(payload.refresh_token, expected_type="refresh")
+    user_id = decoded.get("sub")
+    email = decoded.get("email")
+
+    user = None
+    if user_id:
+        user = db.query(User).filter(User.id == user_id).first()
+    if not user and email:
+        user = db.query(User).filter(User.email == email).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User associated with token not found.",
+        )
+
+    new_token_data = {
+        "sub": user.id,
+        "email": user.email,
+        "role": user.role
+    }
+    new_access_token = create_access_token(new_token_data)
+    new_refresh_token = create_refresh_token(new_token_data)
+
+    return TokenResponse(
+        access_token=new_access_token,
+        refresh_token=new_refresh_token,
+        token_type="bearer",
+        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    )
+
+@router.get("/me", response_model=UserMeResponse, summary="Get current authenticated user profile")
+async def get_me(current_user: User = Depends(get_current_user)):
+    """Protected endpoint that returns the profile of the authenticated user."""
+    return UserMeResponse(
+        id=current_user.id,
+        name=current_user.name,
+        email=current_user.email,
+        role=current_user.role,
+        avatar=current_user.avatar,
+        provider=current_user.provider
     )
