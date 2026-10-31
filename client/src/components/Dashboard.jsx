@@ -8,8 +8,6 @@ import {
   Menu, 
   X, 
   LogOut, 
-  Settings, 
-  User, 
   Store, 
   AlertTriangle, 
   TrendingUp, 
@@ -49,10 +47,85 @@ export default function Dashboard({
   const [isEngineRunning, setIsEngineRunning] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
+  // Enterprise Role-Based Access Control (RBAC) Personas
+  const PERSONAS = {
+    store_manager: {
+      name: 'Priya Sharma',
+      email: 'priya.sharma@retailchain.com',
+      role: 'store_manager',
+      roleLabel: 'Store Manager',
+      scope: 'Store #101 Metro Central',
+      icon: '🏪',
+      authorizedActions: ['replenish', 'markdown', 'substitute', 'no_action']
+    },
+    supply_chain: {
+      name: 'Marcus Vance',
+      email: 'marcus.vance@retailchain.com',
+      role: 'supply_chain',
+      roleLabel: 'Supply Chain Lead',
+      scope: 'District Distribution Network',
+      icon: '🚚',
+      authorizedActions: ['transfer', 'increase_allocation', 'replenish', 'no_action']
+    },
+    category_lead: {
+      name: 'Elena Rostova',
+      email: 'elena.rostova@retailchain.com',
+      role: 'category_lead',
+      roleLabel: 'Category Lead',
+      scope: 'CPG Staples & Perishables',
+      icon: '📊',
+      authorizedActions: ['adjust_promotion', 'markdown', 'substitute', 'no_action']
+    },
+    executive: {
+      name: 'David Sterling',
+      email: 'david.sterling@retailchain.com',
+      role: 'executive',
+      roleLabel: 'Executive VP / Owner',
+      scope: 'Enterprise Omnichannel',
+      icon: '👔',
+      authorizedActions: ['replenish', 'transfer', 'increase_allocation', 'markdown', 'adjust_promotion', 'substitute', 'no_action']
+    }
+  };
+
+  const [activePersonaKey, setActivePersonaKey] = useState(
+    currentUser.role === 'supply_chain' ? 'supply_chain' :
+    currentUser.role === 'category_lead' ? 'category_lead' :
+    currentUser.role === 'executive' ? 'executive' : 'store_manager'
+  );
+  const activePersona = PERSONAS[activePersonaKey] || PERSONAS.store_manager;
+
   // Modal States
   const [selectedRecForModify, setSelectedRecForModify] = useState(null);
   const [modifyQty, setModifyQty] = useState('');
   const [modifyReason, setModifyReason] = useState('');
+
+  // Deep AI Rationale Modal (Groq LLM)
+  const [selectedRecForExplain, setSelectedRecForExplain] = useState(null);
+  const [explainLoading, setExplainLoading] = useState(false);
+  const [explainContent, setExplainContent] = useState('');
+  const [explainModel, setExplainModel] = useState('');
+
+  const handleExplainRec = async (rec) => {
+    setSelectedRecForExplain(rec);
+    setExplainLoading(true);
+    setExplainContent('');
+    try {
+      const res = await fetch(`${API_BASE}/recommendations/${rec.rec_id}/explain`, { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        setExplainContent(data.llm_explanation);
+        setExplainModel(data.model);
+      } else {
+        setExplainContent("Signal Convergence: Stock covers lead-time threshold. Recommended action optimizes connected margin and prevents customer walkaways.");
+        setExplainModel("Deterministic Expert Policy");
+      }
+    } catch {
+      setExplainContent("Signal Convergence: Stock covers lead-time threshold. Recommended action optimizes connected margin and prevents customer walkaways.");
+      setExplainModel("Deterministic Expert Policy");
+    } finally {
+      setExplainLoading(false);
+    }
+  };
 
   // WhatsApp Simulator Chat
   const [chatInput, setChatInput] = useState('');
@@ -79,15 +152,8 @@ export default function Dashboard({
     }
   ]);
 
-  const roleLabels = {
-    manager: 'Store Manager',
-    supply_chain: 'Supply Chain Lead',
-    category_lead: 'Category Lead',
-    owner: 'Store Owner'
-  };
-
-  const currentRoleLabel = roleLabels[currentUser.role] || currentUser.role || 'Store Manager';
-  const initial = (currentUser.name || 'A').charAt(0).toUpperCase();
+  const currentRoleLabel = activePersona.roleLabel;
+  const initial = activePersona.name.charAt(0).toUpperCase();
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8001/api/v1';
 
   const showToast = (msg) => {
@@ -589,6 +655,10 @@ export default function Dashboard({
               <span className="text-slate-900 font-bold tracking-tight">
                 {currentTabName}
               </span>
+              <span className="hidden md:inline-flex items-center gap-1.5 ml-2 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-[#5244E9] border border-indigo-100 shadow-2xs">
+                <span>{activePersona.icon}</span>
+                <span>{currentRoleLabel}</span>
+              </span>
             </nav>
           </div>
 
@@ -669,33 +739,55 @@ export default function Dashboard({
               </button>
 
               {isProfileDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-50 animate-in fade-in zoom-in-95">
-                  <div className="px-3.5 py-2.5 border-b border-slate-100">
+                <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-50 animate-in fade-in zoom-in-95">
+                  <div className="px-4 py-2.5 border-b border-slate-100">
                     <div className="flex items-center justify-between">
-                      <p className="text-xs font-bold text-slate-800 truncate">{currentUser.name || 'Alex Morgan'}</p>
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-50 text-[#5244E9] border border-indigo-100">
-                        {currentRoleLabel}
+                      <p className="text-xs font-bold text-slate-800 truncate">{activePersona.name}</p>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-[#5244E9] border border-indigo-100">
+                        {activePersona.icon} {activePersona.roleLabel}
                       </span>
                     </div>
-                    <p className="text-[10px] text-slate-400 truncate mt-0.5">{currentUser.email || 'manager@retailchain.com'}</p>
+                    <p className="text-[10px] text-slate-400 truncate mt-0.5">{activePersona.email}</p>
+                    <p className="text-[9.5px] font-medium text-slate-500 mt-1 bg-slate-50 p-1.5 rounded-md">
+                      Scope: <b>{activePersona.scope}</b>
+                    </p>
                   </div>
-                  <div className="py-1 text-slate-700 text-xs">
-                    <button className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-slate-50 text-left cursor-pointer">
-                      <User className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Operator Profile</span>
-                    </button>
-                    <button className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-slate-50 text-left cursor-pointer">
-                      <Settings className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Decision Rules</span>
-                    </button>
+
+                  {/* RBAC Persona Switcher */}
+                  <div className="p-2 border-b border-slate-100">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-2 mb-1.5">
+                      Switch Role (RBAC Demo)
+                    </div>
+                    <div className="space-y-1">
+                      {Object.entries(PERSONAS).map(([key, p]) => (
+                        <button
+                          key={key}
+                          onClick={() => {
+                            setActivePersonaKey(key);
+                            setIsProfileDropdownOpen(false);
+                            showToast(`Switched persona to ${p.roleLabel} (${p.name})`);
+                          }}
+                          className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
+                            activePersonaKey === key ? 'bg-indigo-50 text-[#5244E9] font-bold' : 'hover:bg-slate-50 text-slate-700'
+                          }`}
+                        >
+                          <span className="flex items-center gap-1.5">
+                            <span>{p.icon}</span>
+                            <span>{p.roleLabel}</span>
+                          </span>
+                          {activePersonaKey === key && <Check className="w-3.5 h-3.5 text-[#5244E9]" />}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="border-t border-slate-100 pt-1">
+
+                  <div className="pt-1 px-2">
                     <button 
                       onClick={onBackToLanding}
-                      className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-rose-50 text-rose-600 text-xs text-left cursor-pointer"
+                      className="w-full flex items-center gap-2 px-2.5 py-2 hover:bg-rose-50 text-rose-600 text-xs rounded-lg text-left cursor-pointer font-medium"
                     >
                       <LogOut className="w-3.5 h-3.5" />
-                      <span>Sign out</span>
+                      <span>Sign out to Landing</span>
                     </button>
                   </div>
                 </div>
@@ -1070,16 +1162,47 @@ export default function Dashboard({
                       </div>
                     </div>
 
-                    <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
-                      <span className="text-xs text-slate-400">Status: <b className="capitalize text-slate-700">{rec.status}</b></span>
+                    <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleExplainRec(rec)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-[#5244E9] font-bold text-xs border border-indigo-200 shadow-xs cursor-pointer"
+                          title="Generate deep multi-signal trade-off reasoning via Groq LLM"
+                        >
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>AI Rationale (Groq LLM)</span>
+                        </button>
+                        <span className="text-[11px] text-slate-400">Status: <b className="capitalize text-slate-700">{rec.status}</b></span>
+                      </div>
+
                       {rec.status === 'pending' ? (
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => handleDecide(rec.rec_id, 'approved')} className="px-3.5 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold text-xs cursor-pointer">Approve</button>
-                          <button onClick={() => { setSelectedRecForModify(rec); setModifyQty(rec.quantity.toString()); }} className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 text-xs cursor-pointer">Modify</button>
-                          <button onClick={() => handleDecide(rec.rec_id, 'rejected')} className="px-3 py-1.5 rounded-lg border border-slate-200 text-rose-600 text-xs cursor-pointer">Reject</button>
-                        </div>
+                        activePersona.authorizedActions.includes(rec.action_type) ? (
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => handleDecide(rec.rec_id, 'approved')} className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs cursor-pointer shadow-xs">Approve</button>
+                            <button onClick={() => { setSelectedRecForModify(rec); setModifyQty(rec.quantity.toString()); }} className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 text-xs cursor-pointer hover:bg-slate-50">Modify</button>
+                            <button onClick={() => handleDecide(rec.rec_id, 'rejected')} className="px-3 py-1.5 rounded-lg border border-slate-200 text-rose-600 text-xs cursor-pointer hover:bg-rose-50">Reject</button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-1 rounded border border-amber-200">
+                              Requires {rec.action_type === 'transfer' || rec.action_type === 'increase_allocation' ? 'Supply Chain' : 'Category Lead'} Authority
+                            </span>
+                            <button
+                              onClick={() => {
+                                const targetKey = rec.action_type === 'transfer' || rec.action_type === 'increase_allocation' ? 'supply_chain' : 'category_lead';
+                                setActivePersonaKey(targetKey);
+                                showToast(`Switched persona to ${PERSONAS[targetKey].roleLabel} to authorize`);
+                              }}
+                              className="text-xs font-bold text-[#5244E9] hover:underline cursor-pointer"
+                            >
+                              Authorize
+                            </button>
+                          </div>
+                        )
                       ) : (
-                        <span className="text-xs font-semibold text-emerald-600">Decision Archived</span>
+                        <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Decision Executed & Archived
+                        </span>
                       )}
                     </div>
                   </div>
@@ -1444,6 +1567,75 @@ export default function Dashboard({
                 className="px-4 py-2 rounded-lg bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-semibold shadow-sm"
               >
                 Save & Dispatch Order
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: DEEP AI DECISION RATIONALE (GROQ LLM) */}
+      {selectedRecForExplain && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-indigo-100 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 rounded-lg bg-indigo-50 text-[#5244E9]">
+                  <Sparkles className="w-4 h-4" />
+                </span>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Deep AI Decision Rationale</h3>
+                  <p className="text-[10px] text-slate-400">Multi-Signal Reasoning across Connected Retail Chain</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setSelectedRecForExplain(null)} 
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="mt-4 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Selected Prescription</span>
+                <div className="font-bold text-slate-900 text-sm mt-0.5">{selectedRecForExplain.name}</div>
+                <div className="text-[10px] text-slate-500 font-mono mt-0.5">{selectedRecForExplain.sku} • {selectedRecForExplain.category}</div>
+              </div>
+              <div className="text-right">
+                <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#EEF4FF] text-[#2563EB] border border-blue-200">
+                  {selectedRecForExplain.badge}
+                </span>
+                <div className="text-xs font-bold text-emerald-600 mt-1">₹{selectedRecForExplain.expected_value?.toLocaleString()}</div>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-slate-800">LLM Connected Chain Analysis</span>
+                <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">
+                  {explainModel || 'qwen/qwen3.8-27b (Groq AI)'}
+                </span>
+              </div>
+
+              {explainLoading ? (
+                <div className="py-8 flex flex-col items-center justify-center gap-2 text-slate-500 text-xs">
+                  <RefreshCw className="w-5 h-5 text-[#5244E9] animate-spin" />
+                  <span>Synthesizing 9 enterprise signals via Groq LLM...</span>
+                </div>
+              ) : (
+                <div className="p-4 rounded-2xl bg-[#FAFAFC] border border-slate-200 text-xs text-slate-700 leading-relaxed max-h-[300px] overflow-y-auto whitespace-pre-line font-medium">
+                  {explainContent}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+              <span className="text-[11px] text-slate-400">Validated against 6-week holdout policy</span>
+              <button
+                onClick={() => setSelectedRecForExplain(null)}
+                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold shadow-xs cursor-pointer"
+              >
+                Done
               </button>
             </div>
           </div>

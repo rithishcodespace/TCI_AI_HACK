@@ -617,44 +617,55 @@ class RetailDecisionService:
         elif "reject" in clean_text or "3" == clean_text:
             self.decide_recommendation(1, "rejected", reason="Rejected via WhatsApp")
             reply = "❌ *Decision Logged:* Recommendation #1 rejected. Reason archived to audit ledger."
-        elif "stockout" in clean_text or "run out" in clean_text or "empty" in clean_text:
-            reply = (
-                "🚨 *Stockout Risk Alert (Next 7 Days):*\n\n"
-                "1. *Royal Basmati Rice 5kg* (SKU-4412)\n"
-                "   • Current Stock: 38 units (2.1 days cover)\n"
-                "   • Supplier Lead: 6 days\n"
-                "   • Recommended: Order 120 units by Tuesday\n\n"
-                "2. *Refined Sunflower Oil 5L* (SKU-3110)\n"
-                "   • Current Stock: 45 units (3.8 days cover)\n"
-                "   • Recommended: Dampen promo discount to 10%\n\n"
-                "Reply *Approve 1* to execute rice order immediately."
-            )
-        elif "service level" in clean_text or "kpi" in clean_text:
-            reply = (
-                "📊 *Today's Store Performance:*\n\n"
-                "• *Service Level:* 96.8% (Target: 95.0%)\n"
-                "• *Stockout Rate:* 4.2% (-71% vs baseline)\n"
-                "• *Active Margin:* 23.4% (+5.2% lift)\n"
-                "• *Pending Decisions:* 3 items awaiting review"
-            )
-        elif "excess" in clean_text or "markdown" in clean_text:
-            reply = (
-                "📦 *Excess & Expiry Risk:*\n\n"
-                "• *Cadbury Celebration Gift Box 500g* (SKU-8801)\n"
-                "   • On hand: 240 units (48 days cover)\n"
-                "   • Days to Expiry: 22 days\n"
-                "   • Action: Apply 25% markdown (New Price: ₹240)\n\n"
-                "Reply *Approve Markdown* to push price tags to store POS."
-            )
         else:
-            reply = (
-                f"🤖 *RetailSense AI Bot*\n\n"
-                "I understand commands such as:\n"
-                "• *'Which items will run out this week?'*\n"
-                "• *'Show excess inventory'* or *'Markdowns'*\n"
-                "• *'What is our service level?'*\n"
-                "• *'Approve 1'* to authorize purchase orders"
-            )
+            # Leverage Groq LLM with full enterprise store context
+            llm_reply = None
+            try:
+                from app.services.llm_reasoning_service import llm_service
+                llm_reply = llm_service.reason_conversational(text, self.whatsapp_messages)
+            except Exception as e:
+                print("[RetailDecisionService] LLM fallback note:", e)
+
+            if llm_reply:
+                reply = llm_reply
+            elif "stockout" in clean_text or "run out" in clean_text or "empty" in clean_text:
+                reply = (
+                    "🚨 *Stockout Risk Alert (Next 7 Days):*\n\n"
+                    "1. *Royal Basmati Rice 5kg* (SKU-4412)\n"
+                    "   • Current Stock: 38 units (2.1 days cover)\n"
+                    "   • Supplier Lead: 6 days\n"
+                    "   • Recommended: Order 120 units by Tuesday\n\n"
+                    "2. *Refined Sunflower Oil 5L* (SKU-3110)\n"
+                    "   • Current Stock: 45 units (3.8 days cover)\n"
+                    "   • Recommended: Dampen promo discount to 10%\n\n"
+                    "Reply *Approve 1* to execute rice order immediately."
+                )
+            elif "service level" in clean_text or "kpi" in clean_text:
+                reply = (
+                    "📊 *Today's Store Performance:*\n\n"
+                    "• *Service Level:* 96.8% (Target: 95.0%)\n"
+                    "• *Stockout Rate:* 4.2% (-71% vs baseline)\n"
+                    "• *Active Margin:* 23.4% (+5.2% lift)\n"
+                    "• *Pending Decisions:* 3 items awaiting review"
+                )
+            elif "excess" in clean_text or "markdown" in clean_text:
+                reply = (
+                    "📦 *Excess & Expiry Risk:*\n\n"
+                    "• *Cadbury Celebration Gift Box 500g* (SKU-8801)\n"
+                    "   • On hand: 240 units (48 days cover)\n"
+                    "   • Days to Expiry: 22 days\n"
+                    "   • Action: Apply 25% markdown (New Price: ₹240)\n\n"
+                    "Reply *Approve Markdown* to push price tags to store POS."
+                )
+            else:
+                reply = (
+                    f"🤖 *RetailSense AI Bot*\n\n"
+                    "I understand commands such as:\n"
+                    "• *'Which items will run out this week?'*\n"
+                    "• *'Show excess inventory'* or *'Markdowns'*\n"
+                    "• *'What is our service level?'*\n"
+                    "• *'Approve 1'* to authorize purchase orders"
+                )
 
         new_msg = {
             "id": len(self.whatsapp_messages) + 2,

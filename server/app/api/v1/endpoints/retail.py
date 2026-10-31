@@ -43,6 +43,34 @@ async def decide_recommendation(rec_id: int, req: DecisionRequest):
         raise HTTPException(status_code=404, detail=res["error"])
     return res
 
+@router.post("/recommendations/{rec_id}/explain")
+async def explain_recommendation(rec_id: int):
+    """Uses Groq LLM to generate real-time multi-signal connected chain trade-off rationale."""
+    rec = next((r for r in retail_service.recommendations if r["rec_id"] == rec_id), None)
+    if not rec:
+        raise HTTPException(status_code=404, detail="Recommendation not found")
+
+    from app.services.llm_reasoning_service import llm_service
+    explanation = llm_service.explain_decision(
+        sku_name=rec["name"],
+        action=rec["action_type"],
+        details={
+            "sku": rec["sku"],
+            "quantity": rec["quantity"],
+            "expected_value": rec["expected_value"],
+            "rationale": rec["rationale"],
+            "alternatives": rec["alternatives_considered"]
+        }
+    )
+    return {
+        "rec_id": rec_id,
+        "sku": rec["sku"],
+        "name": rec["name"],
+        "action_type": rec["action_type"],
+        "llm_explanation": explanation,
+        "model": "qwen/qwen3.8-27b (Groq AI)"
+    }
+
 @router.get("/inventory/risk-board")
 async def get_risk_board():
     """Live SKU risk board with days of cover, reorder points, and expiry days."""

@@ -240,3 +240,54 @@ async def get_me(current_user: User = Depends(get_current_user)):
         avatar=current_user.avatar,
         provider=current_user.provider
     )
+
+@router.get("/roles/permissions", summary="Get enterprise Role-Based Access Control (RBAC) matrix")
+async def get_role_permissions():
+    """
+    Returns enterprise role definitions, approval authorities across the 7 canonical actions,
+    and operational scopes for Store Manager, Supply Chain Lead, Category Lead, and Executive VP.
+    """
+    return {
+        "roles": {
+            "store_manager": {
+                "title": "Store Manager",
+                "default_persona": "Priya Sharma (Store #101)",
+                "scope": "Single Store Physical Operations",
+                "authorized_actions": ["replenish", "markdown", "substitute", "no_action"],
+                "can_trigger_engine": False,
+                "can_export_po": True,
+                "can_override_guardrails": False,
+                "description": "Floor-level execution: reviews daily store prescriptions, approves supplier POs, schedules shelf markdowns, and coordinates floor staff tasks."
+            },
+            "supply_chain": {
+                "title": "Supply Chain Lead",
+                "default_persona": "Marcus Vance (Logistics Hub)",
+                "scope": "District Distribution Centers & Inter-Store Network",
+                "authorized_actions": ["transfer", "increase_allocation", "replenish", "no_action"],
+                "can_trigger_engine": True,
+                "can_export_po": True,
+                "can_override_guardrails": True,
+                "description": "Network balancing: authorizes intra-district cross-dock transfers, increases regional DC slotting allocations, and monitors supplier lead times."
+            },
+            "category_lead": {
+                "title": "Category Merchandising Lead",
+                "default_persona": "Elena Rostova (CPG Staples & Chilled)",
+                "scope": "Multi-Store Category Strategy",
+                "authorized_actions": ["adjust_promotion", "markdown", "substitute", "no_action"],
+                "can_trigger_engine": True,
+                "can_export_po": True,
+                "can_override_guardrails": True,
+                "description": "Commercial margin optimization: manages promo elasticity dampening, dynamic markdown clearance rules, and brand substitution parity."
+            },
+            "executive": {
+                "title": "Executive VP / Store Owner",
+                "default_persona": "David Sterling (Chief Merchandising Officer)",
+                "scope": "Enterprise Omnichannel Network",
+                "authorized_actions": ["replenish", "transfer", "increase_allocation", "markdown", "adjust_promotion", "substitute", "no_action"],
+                "can_trigger_engine": True,
+                "can_export_po": True,
+                "can_override_guardrails": True,
+                "description": "Strategic oversight: reviews annualized working capital savings (₹4,12,000/store), 6-week holdout ROI backtest, and Data Quality audit ledgers."
+            }
+        }
+    }
