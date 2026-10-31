@@ -14,9 +14,13 @@ import {
   ArrowLeft
 } from 'lucide-react';
 
-export default function Dashboard({ currentUser = { name: 'Rithish', email: 'user@college.edu', role: 'student' }, onBackToLanding }) {
+export default function Dashboard({ 
+  currentUser = { name: 'Rithish', email: 'user@college.edu', role: 'student' }, 
+  onBackToLanding 
+}) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('all-reviews');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [activeTab, setActiveTab] = useState('reports');
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
@@ -53,6 +57,14 @@ export default function Dashboard({ currentUser = { name: 'Rithish', email: 'use
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  const handleToggleSidebar = () => {
+    if (window.innerWidth < 1024) {
+      setIsMobileMenuOpen((prev) => !prev);
+    } else {
+      setIsSidebarCollapsed((prev) => !prev);
+    }
+  };
+
   const navItems = [
     {
       id: 'overview',
@@ -82,7 +94,7 @@ export default function Dashboard({ currentUser = { name: 'Rithish', email: 'use
     },
   ];
 
-  const currentTabName = navItems.find((item) => item.id === activeTab)?.name || 'All Reviews';
+  const currentTabName = navItems.find((item) => item.id === activeTab)?.name || 'Reports';
 
   return (
     <div className="min-h-screen bg-[#FDFDFE] flex flex-col lg:flex-row font-sans text-slate-800 antialiased selection:bg-blue-100 selection:text-blue-900">
@@ -96,17 +108,24 @@ export default function Dashboard({ currentUser = { name: 'Rithish', email: 'use
         />
       )}
 
-      {/* Sidebar Navigation */}
+      {/* ========================================================
+          SIDEBAR NAVIGATION (Collapsible on Desktop & Drawer on Mobile)
+      ======================================================== */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-100 flex flex-col justify-between transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto ${
-          isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
+        className={`fixed inset-y-0 left-0 z-50 bg-white border-r border-slate-100 flex flex-col justify-between transition-all duration-300 ease-in-out lg:static lg:z-auto ${
+          isMobileMenuOpen 
+            ? 'translate-x-0 shadow-2xl w-72' 
+            : '-translate-x-full lg:translate-x-0'
+        } ${
+          isSidebarCollapsed ? 'lg:w-[76px]' : 'lg:w-72'
         }`}
       >
-        <div className="flex flex-col flex-1 p-5 overflow-y-auto">
+        <div className={`flex flex-col flex-1 ${isSidebarCollapsed ? 'p-3' : 'p-5'} overflow-y-auto overflow-x-hidden`}>
+          
           {/* Logo Header */}
           <div className="flex items-center justify-between pb-7 pt-1 px-1">
-            <div className="flex items-center gap-3 select-none">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-sm shadow-blue-500/20">
+            <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center mx-auto' : 'gap-3'} select-none`}>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-sm shadow-blue-500/20 flex-shrink-0">
                 <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
                   <rect x="4" y="11" width="3.2" height="9" rx="1.6" />
                   <rect x="10.4" y="4" width="3.2" height="16" rx="1.6" />
@@ -114,16 +133,19 @@ export default function Dashboard({ currentUser = { name: 'Rithish', email: 'use
                 </svg>
               </div>
 
-              <div className="flex flex-col">
-                <span className="text-[17px] font-[800] text-slate-900 tracking-tight leading-tight">
-                  VoiceOfCustomer
-                </span>
-                <span className="text-[9.5px] font-[700] text-slate-400 tracking-[0.14em] uppercase leading-tight mt-0.5">
-                  FEEDBACK INTELLIGENCE
-                </span>
-              </div>
+              {!isSidebarCollapsed && (
+                <div className="flex flex-col min-w-0 animate-in fade-in duration-200">
+                  <span className="text-[17px] font-[800] text-slate-900 tracking-tight leading-tight truncate">
+                    VoiceOfCustomer
+                  </span>
+                  <span className="text-[9.5px] font-[700] text-slate-400 tracking-[0.14em] uppercase leading-tight mt-0.5 truncate">
+                    FEEDBACK INTELLIGENCE
+                  </span>
+                </div>
+              )}
             </div>
 
+            {/* Mobile Close Button (only inside mobile slide-out drawer) */}
             <button
               onClick={() => setIsMobileMenuOpen(false)}
               className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
@@ -135,10 +157,15 @@ export default function Dashboard({ currentUser = { name: 'Rithish', email: 'use
 
           {/* Section: Workspace */}
           <div className="mt-2">
-            <div className="text-[11px] font-[700] text-slate-400 uppercase tracking-wider px-3 mb-2.5">
-              Workspace
-            </div>
+            {!isSidebarCollapsed ? (
+              <div className="text-[11px] font-[700] text-slate-400 uppercase tracking-wider px-3 mb-2.5 animate-in fade-in duration-200">
+                Workspace
+              </div>
+            ) : (
+              <div className="w-6 h-px bg-slate-200 mx-auto my-3" />
+            )}
 
+            {/* Nav items */}
             <nav className="space-y-1">
               {navItems.map((item) => {
                 const isActive = activeTab === item.id;
@@ -151,16 +178,21 @@ export default function Dashboard({ currentUser = { name: 'Rithish', email: 'use
                       setActiveTab(item.id);
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-150 text-left ${
+                    title={isSidebarCollapsed ? item.name : undefined}
+                    className={`w-full flex items-center ${
+                      isSidebarCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-2.5'
+                    } rounded-xl text-[14px] font-medium transition-all duration-150 text-left ${
                       isActive
                         ? 'bg-[#EEF4FF] text-[#2563EB] font-semibold shadow-xs'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                     }`}
                   >
-                    <span className={`${isActive ? 'text-[#2563EB]' : 'text-slate-400'}`}>
+                    <span className={`${isActive ? 'text-[#2563EB]' : 'text-slate-400'} flex-shrink-0`}>
                       {item.customIcon ? item.customIcon : <Icon className="w-[18px] h-[18px] stroke-[2]" />}
                     </span>
-                    <span>{item.name}</span>
+                    {!isSidebarCollapsed && (
+                      <span className="truncate">{item.name}</span>
+                    )}
                   </button>
                 );
               })}
@@ -168,34 +200,44 @@ export default function Dashboard({ currentUser = { name: 'Rithish', email: 'use
           </div>
         </div>
 
-        {/* Optional back to landing page */}
+        {/* Back to landing page */}
         {onBackToLanding && (
-          <div className="p-4 border-t border-slate-50">
+          <div className={`border-t border-slate-50 ${isSidebarCollapsed ? 'p-2' : 'p-4'}`}>
             <button
               onClick={onBackToLanding}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-slate-500 hover:text-blue-600 hover:bg-blue-50/60 rounded-xl transition-all"
+              title={isSidebarCollapsed ? "Back to Landing Page" : undefined}
+              className={`w-full flex items-center justify-center gap-2 ${
+                isSidebarCollapsed ? 'p-2.5' : 'px-3 py-2 text-xs'
+              } font-semibold text-slate-500 hover:text-blue-600 hover:bg-blue-50/60 rounded-xl transition-all`}
             >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Landing Page</span>
+              <ArrowLeft className="w-4 h-4 flex-shrink-0" />
+              {!isSidebarCollapsed && <span className="truncate">Back to Landing Page</span>}
             </button>
           </div>
         )}
       </aside>
 
-      {/* Main Wrapper */}
+      {/* ========================================================
+          MAIN APP WRAPPER (Header + Content Canvas)
+      ======================================================== */}
       <div className="flex-1 flex flex-col min-w-0">
         
-        {/* Top Header */}
+        {/* Top Header Bar with Hamburger Button ALWAYS visible */}
         <header className="h-16 px-4 sm:px-8 border-b border-slate-100 bg-white/90 backdrop-blur-md sticky top-0 z-30 flex items-center justify-between">
-          <div className="flex items-center gap-3 sm:gap-4">
+          
+          {/* Left: Hamburger Toggle + Breadcrumbs */}
+          <div className="flex items-center gap-2 sm:gap-3.5">
+            {/* Hamburger Button (Desktop + Mobile) */}
             <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+              onClick={handleToggleSidebar}
+              className="p-2 -ml-1 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:scale-95 transition-all cursor-pointer"
               aria-label="Toggle navigation menu"
+              title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               <Menu className="w-5 h-5 stroke-[2.2]" />
             </button>
 
+            {/* Breadcrumb Hierarchy */}
             <nav className="flex items-center gap-2 text-[14px]">
               <span className="text-slate-400 font-medium hover:text-slate-600 transition-colors cursor-pointer">
                 Workspace
@@ -207,7 +249,9 @@ export default function Dashboard({ currentUser = { name: 'Rithish', email: 'use
             </nav>
           </div>
 
+          {/* Right: Notifications + User Profile */}
           <div className="flex items-center gap-2.5 sm:gap-3">
+            
             {/* Notification Bell */}
             <div className="relative">
               <button
@@ -236,7 +280,7 @@ export default function Dashboard({ currentUser = { name: 'Rithish', email: 'use
               )}
             </div>
 
-            {/* User Profile Avatar */}
+            {/* User Profile Avatar with Chevron */}
             <div className="relative">
               <button
                 onClick={() => {
@@ -288,12 +332,13 @@ export default function Dashboard({ currentUser = { name: 'Rithish', email: 'use
                 </div>
               )}
             </div>
+
           </div>
         </header>
 
         {/* Content Canvas */}
         <main className="flex-1 p-6 sm:p-10 flex flex-col items-center justify-center">
-          <div className="w-full max-w-4xl border-2 border-dashed border-slate-200/80 rounded-2xl min-h-[460px] flex flex-col items-center justify-center p-8 text-center bg-white/50">
+          <div className="w-full max-w-4xl border-2 border-dashed border-slate-200/80 rounded-2xl min-h-[460px] flex flex-col items-center justify-center p-8 text-center bg-white/50 transition-all duration-300">
             <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-3 shadow-xs">
               <CreditCard className="w-6 h-6 stroke-[1.8]" />
             </div>
@@ -305,6 +350,7 @@ export default function Dashboard({ currentUser = { name: 'Rithish', email: 'use
             </p>
           </div>
         </main>
+
       </div>
 
     </div>

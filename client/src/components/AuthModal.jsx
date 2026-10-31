@@ -51,68 +51,47 @@ export default function AuthModal({
     },
   ];
 
-  // Real Google OAuth Handler via useGoogleLogin (if client ID is configured)
-  const hasGoogleClientId = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID);
-
-  let googleLoginTrigger = null;
-  try {
-    if (hasGoogleClientId) {
-      googleLoginTrigger = useGoogleLogin({
-        onSuccess: async (tokenResponse) => {
-          setIsLoading(true);
-          try {
-            // Fetch Google user profile using access token
-            const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-              headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-            });
-            const profile = await res.json();
-            
-            onAuthSuccess({
-              name: profile.name || 'Google User',
-              email: profile.email,
-              avatar: profile.picture,
-              role: selectedRole,
-              provider: 'google'
-            });
-          } catch (err) {
-            console.error('Google profile fetch error:', err);
-            // Fallback user object
-            onAuthSuccess({
-              name: 'Google User',
-              email: 'user@college.edu',
-              role: selectedRole,
-              provider: 'google'
-            });
-          } finally {
-            setIsLoading(false);
-          }
-        },
-        onError: (error) => {
-          console.error('Google Sign In Error:', error);
-          setNotification('Google Sign-In was cancelled or failed.');
-        },
-      });
-    }
-  } catch (e) {
-    console.warn('GoogleOAuthProvider not active or invalid client id:', e);
-  }
+  // Google OAuth via useGoogleLogin (top level)
+  const loginWithGoogle = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setIsLoading(true);
+      try {
+        const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+        });
+        const profile = await res.json();
+        
+        onAuthSuccess({
+          name: profile.name || 'Google User',
+          email: profile.email,
+          avatar: profile.picture,
+          role: selectedRole,
+          provider: 'google'
+        });
+      } catch (err) {
+        console.error('Google profile fetch error:', err);
+        onAuthSuccess({
+          name: 'Google User',
+          email: 'user@college.edu',
+          role: selectedRole,
+          provider: 'google'
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    onError: (error) => {
+      console.error('Google Sign In Error:', error);
+      setNotification('Google Sign-In was cancelled or failed.');
+    },
+  });
 
   const handleGoogleClick = () => {
-    if (hasGoogleClientId && googleLoginTrigger) {
-      googleLoginTrigger();
-    } else {
-      // Graceful fallback when Google Client ID is not configured yet
-      setIsLoading(true);
-      setTimeout(() => {
-        setIsLoading(false);
-        onAuthSuccess({
-          name: 'Rithish (Google User)',
-          email: email || 'student@college.edu',
-          avatar: null,
-          role: selectedRole,
-          provider: 'google (demo)',
-        });
-      }, 600);
+    try {
+      loginWithGoogle();
+    } catch (err) {
+      console.error('Google trigger error:', err);
+      setNotification('Could not open Google Sign-In.');
     }
   };
 

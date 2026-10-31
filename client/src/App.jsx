@@ -14,7 +14,7 @@ export default function App() {
     role: 'student',
   });
 
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '1088461528574-dummyclientidforvoiceofcustomer.apps.googleusercontent.com';
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '724191775115-ucph7ka0m8tgnnrm1r2r5gbob92qv5su.apps.googleusercontent.com';
 
   const handleOpenAuth = (mode = 'signin') => {
     setAuthMode(mode);

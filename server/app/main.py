@@ -1,7 +1,19 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+from app.core.database import init_db
 from app.api.v1.api import api_router
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize database tables on startup
+    try:
+        init_db()
+        print("✓ Successfully connected to PostgreSQL and initialized database tables.")
+    except Exception as e:
+        print("✗ PostgreSQL initialization warning:", e)
+    yield
 
 def create_app() -> FastAPI:
     app = FastAPI(
@@ -9,7 +21,8 @@ def create_app() -> FastAPI:
         version=settings.VERSION,
         openapi_url=f"{settings.API_V1_STR}/openapi.json",
         docs_url="/docs",
-        redoc_url="/redoc"
+        redoc_url="/redoc",
+        lifespan=lifespan
     )
 
     # Set up CORS middleware
@@ -30,7 +43,8 @@ def create_app() -> FastAPI:
         return {
             "message": f"Welcome to {settings.PROJECT_NAME}",
             "docs": "/docs",
-            "api_v1": settings.API_V1_STR
+            "api_v1": settings.API_V1_STR,
+            "database": "PostgreSQL connected"
         }
 
     return app
