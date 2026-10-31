@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 import json
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "VoiceOfCustomer API"
+    PROJECT_NAME: str = "RetailSense — AI Decision Intelligence API"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     

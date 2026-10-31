@@ -1,19 +1,19 @@
 import { useState } from 'react';
 import {
-  Users,
-  Utensils,
-  ShieldCheck,
+  Store,
+  Boxes,
+  BarChart3,
   Mail,
   Lock,
   Eye,
   EyeOff,
   ArrowRight,
   ArrowLeft,
-  MessageSquare,
+  Activity,
   Lightbulb,
-  BarChart2,
-  Star,
-  ThumbsUp,
+  CheckCircle2,
+  TrendingUp,
+  User,
   X
 } from 'lucide-react';
 import { useGoogleLogin } from '@react-oauth/google';
@@ -25,7 +25,7 @@ export default function AuthPage({
   onBackToHome
 }) {
   const [mode, setMode] = useState(initialMode); // 'signin' | 'signup'
-  const [selectedRole, setSelectedRole] = useState('student');
+  const [selectedRole, setSelectedRole] = useState('store_manager');
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,22 +35,22 @@ export default function AuthPage({
 
   const roles = [
     {
-      id: 'student',
-      title: 'Student',
-      description: 'Submit feedback',
-      icon: Users,
+      id: 'store_manager',
+      title: 'Store Manager',
+      description: 'Store replenishment',
+      icon: Store,
     },
     {
-      id: 'canteen_manager',
-      title: 'Canteen Manager',
-      description: 'Manage insights',
-      icon: Utensils,
+      id: 'supply_chain',
+      title: 'Supply Chain Lead',
+      description: 'Inventory & logistics',
+      icon: Boxes,
     },
     {
-      id: 'admin',
-      title: 'Administrator',
-      description: 'Full access',
-      icon: ShieldCheck,
+      id: 'executive',
+      title: 'Category Lead',
+      description: 'Pricing & margins',
+      icon: BarChart3,
     },
   ];
 
@@ -100,7 +100,7 @@ export default function AuthPage({
         console.error('Google profile fetch error:', err);
         const fallbackUser = {
           name: 'Google User',
-          email: 'student@college.edu',
+          email: 'manager@retailchain.com',
           role: selectedRole,
           provider: 'google',
         };
@@ -227,10 +227,10 @@ export default function AuthPage({
             </svg>
             <div className="flex flex-col">
               <span className="text-[18px] font-[800] text-slate-900 tracking-tight leading-tight">
-                VoiceOfCustomer
+                RetailSense
               </span>
               <span className="text-[8.5px] font-[700] text-slate-400 tracking-[0.14em] uppercase leading-tight mt-0.5">
-                FEEDBACK INTELLIGENCE
+                DECISION INTELLIGENCE
               </span>
             </div>
           </div>
@@ -244,8 +244,8 @@ export default function AuthPage({
           </h1>
           <p className="text-[13px] sm:text-[13.5px] text-[#64748B] mt-1 font-normal">
             {mode === 'signin'
-              ? 'Sign in to continue to your workspace.'
-              : 'Sign up to start sharing and managing insights.'}
+              ? 'Sign in to access your retail decision workspace.'
+              : 'Sign up to coordinate connected retail decisions.'}
           </p>
 
           {/* Toast Notification */}
@@ -305,7 +305,7 @@ export default function AuthPage({
                 </label>
                 <div className="relative flex items-center">
                   <span className="absolute left-3.5 text-slate-400 pointer-events-none">
-                    <Users className="w-4 h-4" />
+                    <User className="w-4 h-4" />
                   </span>
                   <input
                     type="text"
@@ -333,7 +333,7 @@ export default function AuthPage({
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@college.edu"
+                  placeholder="manager@retailchain.com"
                   className="w-full pl-10 pr-3.5 py-3 bg-white border border-slate-200 rounded-xl text-[14px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#5244E9] focus:ring-2 focus:ring-[#5244E9]/15 transition-all"
                 />
               </div>
@@ -463,7 +463,7 @@ export default function AuthPage({
 
         {/* Footer info */}
         <div className="text-center lg:text-left text-[11px] text-slate-400">
-          © {new Date().getFullYear()} VoiceOfCustomer. All rights reserved.
+          © {new Date().getFullYear()} RetailSense Decision Intelligence. All rights reserved.
         </div>
 
       </div>
@@ -481,17 +481,17 @@ export default function AuthPage({
         <div className="relative z-10 max-w-lg">
           {/* Pill Badge */}
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/85 backdrop-blur-xs border border-blue-200/60 shadow-2xs text-[#2563EB] text-[11px] font-bold mb-5">
-            <BarChart2 className="w-3.5 h-3.5 stroke-[2.2]" />
-            <span>Feedback Intelligence</span>
+            <Activity className="w-3.5 h-3.5 stroke-[2.2]" />
+            <span>Retail AI • Decision Intelligence</span>
           </div>
 
           <h2 className="text-[40px] xl:text-[46px] font-[800] tracking-[-0.03em] leading-[1.12]">
-            <span className="text-[#0F172A] block">Same feedback.</span>
-            <span className="text-[#2563EB] block">Greater impact.</span>
+            <span className="text-[#0F172A] block">Connected decisions.</span>
+            <span className="text-[#2563EB] block">Measurable impact.</span>
           </h2>
 
           <p className="mt-4 text-[15px] xl:text-[16px] text-[#475569] leading-relaxed">
-            Help us understand your experience and make your campus dining better for everyone.
+            An agentic AI system that reasons across enterprise information to coordinate what action each store or channel should take next, and why.
           </p>
 
           {/* 3 Value Props */}
@@ -500,14 +500,14 @@ export default function AuthPage({
             {/* Value 1 */}
             <div className="flex items-start gap-3.5">
               <div className="w-9 h-9 rounded-xl bg-blue-100/80 text-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
-                <MessageSquare className="w-4 h-4 fill-blue-600/20" />
+                <Activity className="w-4 h-4 fill-blue-600/20" />
               </div>
               <div>
                 <h4 className="text-[14px] font-bold text-slate-900 leading-tight">
-                  Share your voice
+                  Cross-Signal Reasoning
                 </h4>
                 <p className="text-[12.5px] text-slate-500 leading-normal mt-0.5">
-                  Submit honest feedback in seconds.
+                  Synthesizes sales, live inventory, promotions, lead times, and weather.
                 </p>
               </div>
             </div>
@@ -519,10 +519,10 @@ export default function AuthPage({
               </div>
               <div>
                 <h4 className="text-[14px] font-bold text-slate-900 leading-tight">
-                  Drive real change
+                  Prescriptive Action Engine
                 </h4>
                 <p className="text-[12.5px] text-slate-500 leading-normal mt-0.5">
-                  Your feedback helps identify recurring issues.
+                  Recommends exact actions: Replenish, Transfer, Markdown, or Allocate.
                 </p>
               </div>
             </div>
@@ -530,14 +530,14 @@ export default function AuthPage({
             {/* Value 3 */}
             <div className="flex items-start gap-3.5">
               <div className="w-9 h-9 rounded-xl bg-blue-100/80 text-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-2xs">
-                <BarChart2 className="w-4 h-4 fill-blue-600/20" />
+                <TrendingUp className="w-4 h-4 text-emerald-600" />
               </div>
               <div>
                 <h4 className="text-[14px] font-bold text-slate-900 leading-tight">
-                  Better dining experience
+                  Measurable ROI vs Baseline
                 </h4>
                 <p className="text-[12.5px] text-slate-500 leading-normal mt-0.5">
-                  Together we create a cleaner, healthier and more enjoyable campus dining experience.
+                  Prevents stockouts (-88%), slashes excess inventory, and protects margins.
                 </p>
               </div>
             </div>
@@ -550,25 +550,28 @@ export default function AuthPage({
 
           <div className="relative w-full max-w-[400px] h-[230px]">
 
-            {/* Floating Utensils Card (Left) */}
-            <div className="absolute left-2 top-10 bg-white rounded-2xl p-3 shadow-[0_10px_25px_rgba(37,99,235,0.12)] border border-blue-100 flex items-center justify-center text-blue-600 animate-bounce duration-1000">
-              <Utensils className="w-6 h-6 stroke-[2.2]" />
-            </div>
-
-            {/* Floating 5-Star Speech Bubble (Center-Left) */}
-            <div className="absolute left-14 -top-2 z-20 bg-white rounded-2xl p-3.5 shadow-[0_15px_30px_rgba(37,99,235,0.15)] border border-blue-100/80 min-w-[170px]">
-              <div className="flex items-center gap-1 text-blue-600 mb-1.5">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-3.5 h-3.5 fill-blue-500 text-blue-500" />
-                ))}
+            {/* Floating Replenish Card (Left) */}
+            <div className="absolute -left-2 top-8 z-20 bg-white rounded-2xl p-2.5 px-3 shadow-[0_10px_25px_rgba(37,99,235,0.12)] border border-blue-100 flex items-center gap-2 text-blue-600 animate-bounce duration-1000">
+              <Boxes className="w-5 h-5 stroke-[2.2] text-[#5244E9]" />
+              <div className="text-left">
+                <p className="text-[10px] font-bold text-slate-800 leading-tight">Replenish</p>
+                <p className="text-[9px] font-bold text-emerald-600 leading-none">+450 Units</p>
               </div>
-              <div className="w-4/5 h-1.5 bg-slate-200 rounded-full mb-1" />
-              <div className="w-3/5 h-1.5 bg-slate-100 rounded-full" />
             </div>
 
-            {/* Floating Thumbs Up Card (Right) */}
-            <div className="absolute right-4 top-4 bg-white rounded-2xl p-3 shadow-[0_10px_25px_rgba(37,99,235,0.12)] border border-blue-100 flex items-center justify-center text-blue-600">
-              <ThumbsUp className="w-5 h-5 fill-blue-50 text-blue-600 stroke-[2.2]" />
+            {/* Floating Accuracy Badge (Center-Left) */}
+            <div className="absolute left-16 -top-3 z-20 bg-white rounded-2xl p-2.5 px-3.5 shadow-[0_15px_30px_rgba(37,99,235,0.15)] border border-blue-100/80 min-w-[170px]">
+              <div className="flex items-center gap-1.5 text-emerald-600 mb-0.5">
+                <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span className="text-[11px] font-bold text-slate-900">98.4% Decision Accuracy</span>
+              </div>
+              <p className="text-[9.5px] font-semibold text-[#5244E9]">+ $24.5K Margin Protected</p>
+            </div>
+
+            {/* Floating Stockout Prevention Card (Right) */}
+            <div className="absolute -right-2 top-4 z-20 bg-white rounded-2xl p-2.5 px-3 shadow-[0_10px_25px_rgba(37,99,235,0.12)] border border-blue-100 flex items-center gap-2 text-slate-800">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-bold text-slate-800">Zero Stockouts</span>
             </div>
 
             {/* Vector Illustration Scene: Student on Bench with Laptop */}

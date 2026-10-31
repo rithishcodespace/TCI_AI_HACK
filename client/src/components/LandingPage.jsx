@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { 
   ChevronDown, 
-  Share2, 
-  Bell, 
-  Menu,
-  X
+  Menu, 
+  X, 
+  Sparkles, 
+  Store, 
+  RefreshCw, 
+  AlertTriangle 
 } from 'lucide-react';
 
 export default function LandingPage({ onLoginClick, onSignupClick }) {
@@ -18,10 +20,10 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
         
         {/* Brand Logo */}
         <div className="flex items-center gap-3 cursor-pointer select-none">
-          {/* Custom Syncly Helix/Loop Logo */}
-          <svg className="w-8 h-8" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          {/* Custom Helix/Loop Gradient Logo */}
+          <svg className="w-8 h-8 shrink-0" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="synclyGradient" x1="4" y1="4" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+              <linearGradient id="retailSynclyGrad" x1="4" y1="4" x2="32" y2="32" gradientUnits="userSpaceOnUse">
                 <stop stopColor="#F43F5E" />
                 <stop offset="0.5" stopColor="#D946EF" />
                 <stop offset="1" stopColor="#6366F1" />
@@ -29,52 +31,59 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
             </defs>
             <path
               d="M13.5 8C17 4.5 22.5 4.5 26 8C29.5 11.5 29.5 17 26 20.5L21.5 25C19 27.5 15 27.5 12.5 25C10 22.5 10 18.5 12.5 16L18 10.5"
-              stroke="url(#synclyGradient)"
+              stroke="url(#retailSynclyGrad)"
               strokeWidth="3.6"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
             <path
               d="M22.5 28C19 31.5 13.5 31.5 10 28C6.5 24.5 6.5 19 10 15.5L14.5 11C17 8.5 21 8.5 23.5 11C26 13.5 26 17.5 23.5 20L18 25.5"
-              stroke="url(#synclyGradient)"
+              stroke="url(#retailSynclyGrad)"
               strokeWidth="3.6"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           </svg>
-          <span className="text-[21px] font-[800] tracking-tight text-[#0F172A]">
-            VoiceOfCustomer
-          </span>
+          <div className="flex flex-col">
+            <span className="text-[21px] font-[800] tracking-tight text-[#0F172A] leading-none">
+              RetailSense
+            </span>
+            <span className="text-[9px] font-[700] text-slate-400 tracking-[0.14em] uppercase leading-tight mt-1">
+              DECISION INTELLIGENCE
+            </span>
+          </div>
         </div>
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center gap-10 text-[15px] font-medium text-[#1E293B]">
+        <nav className="hidden md:flex items-center gap-9 text-[14.5px] font-medium text-[#1E293B]">
           <div className="flex items-center gap-1.5 cursor-pointer hover:text-indigo-600 transition-colors group">
-            <span>Product</span>
+            <span>Prescriptions</span>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 transition-colors stroke-[2.2]" />
           </div>
-          <a href="#solution" className="hover:text-indigo-600 transition-colors">
-            Solution
+          <a href="#signals" className="hover:text-indigo-600 transition-colors">
+            Connected Signals
           </a>
-          <div className="flex items-center gap-1.5 cursor-pointer hover:text-indigo-600 transition-colors group">
-            <span>Resources</span>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 transition-colors stroke-[2.2]" />
-          </div>
+          <a href="#pipeline" className="hover:text-indigo-600 transition-colors">
+            Agentic Flow
+          </a>
+          <a href="#baseline" className="hover:text-indigo-600 transition-colors">
+            Impact vs Baseline
+          </a>
         </nav>
 
         {/* Right CTA Actions: Login & Sign up buttons */}
         <div className="hidden sm:flex items-center gap-3">
           <button 
             onClick={onLoginClick}
-            className="text-slate-700 hover:text-slate-900 font-semibold text-[15px] px-4 py-2 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
+            className="text-slate-700 hover:text-slate-900 font-semibold text-[14.5px] px-4 py-2 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
           >
             Login
           </button>
           <button 
             onClick={onSignupClick}
-            className="bg-[#5244E9] hover:bg-[#4536db] active:scale-[0.98] transition-all text-white text-[15px] font-semibold px-5 py-2.5 rounded-xl shadow-sm hover:shadow-md cursor-pointer"
+            className="bg-[#5244E9] hover:bg-[#4536db] active:scale-[0.98] transition-all text-white text-[14.5px] font-semibold px-5 py-2.5 rounded-xl shadow-sm hover:shadow-md cursor-pointer"
           >
-            Sign up
+            Launch Engine
           </button>
         </div>
 
@@ -92,23 +101,24 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
         {/* Mobile Dropdown Menu */}
         {isMobileMenuOpen && (
           <div className="absolute top-full left-0 right-0 bg-white border-b border-slate-100 shadow-xl p-6 sm:hidden flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
-            <nav className="flex flex-col gap-3 text-[16px] font-medium text-slate-700">
-              <a href="#product" className="py-1 hover:text-indigo-600">Product</a>
-              <a href="#solution" className="py-1 hover:text-indigo-600">Solution</a>
-              <a href="#resources" className="py-1 hover:text-indigo-600">Resources</a>
+            <nav className="flex flex-col gap-3 text-[15px] font-medium text-slate-700">
+              <a href="#prescriptions" className="py-1 hover:text-indigo-600">Prescriptions</a>
+              <a href="#signals" className="py-1 hover:text-indigo-600">Connected Signals</a>
+              <a href="#pipeline" className="py-1 hover:text-indigo-600">Agentic Flow</a>
+              <a href="#baseline" className="py-1 hover:text-indigo-600">Impact vs Baseline</a>
             </nav>
             <div className="flex flex-col gap-2 pt-3 border-t border-slate-100">
               <button 
                 onClick={onLoginClick}
-                className="w-full text-center py-2.5 text-slate-700 font-semibold text-[15px] hover:bg-slate-50 rounded-xl"
+                className="w-full text-center py-2.5 text-slate-700 font-semibold text-[14px] hover:bg-slate-50 rounded-xl"
               >
                 Login
               </button>
               <button 
                 onClick={onSignupClick}
-                className="w-full text-center py-2.5 bg-[#5244E9] hover:bg-[#4536db] text-white font-semibold text-[15px] rounded-xl shadow-sm"
+                className="w-full text-center py-2.5 bg-[#5244E9] hover:bg-[#4536db] text-white font-semibold text-[14px] rounded-xl shadow-sm"
               >
-                Sign up
+                Launch Decision Engine
               </button>
             </div>
           </div>
@@ -116,38 +126,59 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
       </header>
 
       {/* Main Hero Section */}
-      <main className="w-full max-w-[1360px] mx-auto px-6 sm:px-12 pt-8 sm:pt-14 pb-16 flex-1 flex flex-col justify-center">
+      <main className="w-full max-w-[1360px] mx-auto px-6 sm:px-12 pt-6 sm:pt-10 pb-16 flex-1 flex flex-col justify-center">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-6 items-center">
           
           {/* Left Hero Content */}
           <div className="lg:col-span-5 flex flex-col items-start text-left z-10 lg:pr-2">
-            <h1 className="text-[40px] sm:text-[50px] lg:text-[52px] font-[800] text-[#0F172A] tracking-[-0.03em] leading-[1.12]">
-              Turn Customer Feedback <br />
-              into Actionable Insights
+            
+            {/* Theme Badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50/90 border border-indigo-200/60 text-[#5244E9] text-[11px] font-bold mb-4 shadow-2xs">
+              <Sparkles className="w-3.5 h-3.5 stroke-[2.2]" />
+              <span>THEME 2: AI FOR BUSINESS • RETAIL & CPG</span>
+            </div>
+
+            <h1 className="text-[38px] sm:text-[48px] lg:text-[50px] font-[800] text-[#0F172A] tracking-[-0.03em] leading-[1.12]">
+              Turn Enterprise Signals <br />
+              into Connected Decisions
             </h1>
             
-            <p className="mt-6 text-[17px] text-[#64748B] leading-[1.65] font-normal max-w-[460px]">
-              Uncover valuable insights with a customer-centric approach to enhance overall customer satisfaction, boost retention, and accelerate growth.
+            <p className="mt-4 sm:mt-5 text-[15px] sm:text-[16px] text-[#64748B] leading-[1.65] font-normal max-w-[470px]">
+              Retail decisions rarely exist independently. An agentic AI decision-intelligence engine that reasons across demand, store inventory, promotions, and supplier lead times to determine what action each store or channel should take next, and why.
             </p>
 
+            {/* Expected Flow Pipeline Pills */}
+            <div className="mt-6 flex flex-wrap items-center gap-1.5 p-2 bg-slate-50/80 rounded-xl border border-slate-200/80 text-[10.5px] font-bold text-slate-600">
+              <span className="px-2 py-0.5 bg-white rounded-md shadow-2xs text-[#5244E9]">Observe</span>
+              <span className="text-slate-400">→</span>
+              <span className="px-2 py-0.5 bg-white rounded-md shadow-2xs text-blue-600">Predict</span>
+              <span className="text-slate-400">→</span>
+              <span className="px-2 py-0.5 bg-white rounded-md shadow-2xs text-purple-600">Reason</span>
+              <span className="text-slate-400">→</span>
+              <span className="px-2 py-0.5 bg-white rounded-md shadow-2xs text-emerald-600">Decide</span>
+              <span className="text-slate-400">→</span>
+              <span className="px-2 py-0.5 bg-white rounded-md shadow-2xs text-amber-600">Act</span>
+              <span className="text-slate-400">→</span>
+              <span className="px-2 py-0.5 bg-white rounded-md shadow-2xs text-rose-600">Measure</span>
+            </div>
+
             {/* Hero CTA Button */}
-            <div className="mt-8">
+            <div className="mt-7 flex flex-wrap items-center gap-3">
               <button 
                 onClick={onSignupClick}
-                className="group relative overflow-hidden bg-[#5244E9] hover:bg-[#4536db] active:scale-[0.98] transition-all text-white font-medium text-[16px] px-7 py-3 rounded-xl shadow-[0_8px_20px_-4px_rgba(82,68,233,0.35)] flex items-center gap-3 cursor-pointer"
+                className="group relative overflow-hidden bg-[#5244E9] hover:bg-[#4536db] active:scale-[0.98] transition-all text-white font-medium text-[15px] px-6 py-3 rounded-xl shadow-[0_8px_20px_-4px_rgba(82,68,233,0.35)] flex items-center gap-2.5 cursor-pointer"
               >
-                <div 
-                  className="absolute inset-x-0 top-0 h-[48%] pointer-events-none opacity-25"
-                  style={{
-                    backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)',
-                    backgroundSize: '5px 5px'
-                  }}
-                />
-                
-                <span className="relative z-10 font-semibold tracking-[-0.01em]">Get Started Free</span>
-                <span className="relative z-10 text-white/90 text-[18px] font-bold transition-transform group-hover:translate-x-1 duration-200">
+                <span className="relative z-10 font-semibold tracking-[-0.01em]">Launch Decision Engine</span>
+                <span className="relative z-10 text-white/90 text-[17px] font-bold transition-transform group-hover:translate-x-1 duration-200">
                   ›
                 </span>
+              </button>
+
+              <button
+                onClick={onLoginClick}
+                className="px-5 py-3 rounded-xl border border-slate-200/90 text-slate-700 font-semibold text-[14px] hover:bg-slate-50 transition-colors cursor-pointer"
+              >
+                View Live Demo
               </button>
             </div>
           </div>
@@ -159,222 +190,222 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
             <div className="absolute w-[500px] h-[400px] bg-gradient-to-tr from-indigo-100/50 via-purple-50/40 to-transparent rounded-full blur-3xl -z-10 pointer-events-none" />
 
             {/* Main Application Container */}
-            <div className="relative w-full max-w-[620px] bg-white rounded-2xl border border-slate-200/80 shadow-[0_20px_50px_rgba(15,23,42,0.06)] overflow-visible">
+            <div className="relative w-full max-w-[630px] bg-white rounded-2xl border border-slate-200/80 shadow-[0_20px_50px_rgba(15,23,42,0.08)] overflow-visible">
               
-              <div className="grid grid-cols-12 min-h-[365px]">
+              <div className="grid grid-cols-12 min-h-[385px]">
                 
-                {/* Left Panel: Taxonomy */}
-                <div className="col-span-5 p-5 border-r border-slate-100 flex flex-col bg-white rounded-l-2xl">
-                  <h3 className="text-[17px] font-bold text-slate-900 tracking-tight mb-3">
-                    Taxonomy
+                {/* Left Panel: Store & SKU Hierarchy */}
+                <div className="col-span-5 p-4 sm:p-5 border-r border-slate-100 flex flex-col bg-white rounded-l-2xl">
+                  <h3 className="text-[15px] font-bold text-slate-900 tracking-tight mb-2.5 flex items-center justify-between">
+                    <span>Store Hierarchy</span>
+                    <span className="text-[9.5px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-bold border border-blue-100">Live</span>
                   </h3>
 
-                  {/* Taxonomy Stats */}
-                  <div className="grid grid-cols-2 gap-2 pb-4 mb-4 border-b border-slate-100">
+                  {/* Top Stats */}
+                  <div className="grid grid-cols-2 gap-2 pb-3 mb-3 border-b border-slate-100">
                     <div>
-                      <div className="text-[10px] text-slate-400 font-medium tracking-tight">Total feedback</div>
-                      <div className="text-[15px] font-bold text-slate-800 tracking-tight mt-0.5">245,234</div>
+                      <div className="text-[9.5px] text-slate-400 font-medium tracking-tight">Active SKUs</div>
+                      <div className="text-[14px] font-bold text-slate-800 tracking-tight mt-0.5">148,200</div>
                     </div>
                     <div>
-                      <div className="text-[10px] text-slate-400 font-medium tracking-tight">Analyzed issues</div>
-                      <div className="text-[15px] font-bold text-slate-800 tracking-tight mt-0.5">135</div>
+                      <div className="text-[9.5px] text-slate-400 font-medium tracking-tight">Prescriptions</div>
+                      <div className="text-[14px] font-bold text-emerald-600 tracking-tight mt-0.5">3,420</div>
                     </div>
                   </div>
 
-                  {/* Tree Navigation */}
-                  <div className="space-y-2 text-[11px] font-medium text-slate-600">
+                  {/* Tree Hierarchy */}
+                  <div className="space-y-2 text-[10.5px] font-medium text-slate-600">
                     <div className="relative">
+                      {/* Active Store */}
                       <div className="border border-[#7C3AED] bg-[#FBF9FE] text-slate-800 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-[0_1px_3px_rgba(124,58,237,0.08)]">
-                        <span className="text-[10px] text-slate-400 font-bold">›</span>
-                        <span className="w-3.5 h-3.5 flex items-center justify-center text-[#7C3AED]">
-                          <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
-                            <path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3zm2 1v3h3V4H4zm5 0v3h3V4H9zM4 9v3h3V9H4zm5 0v3h3V9H9z"/>
-                          </svg>
-                        </span>
-                        <span className="text-[11px] font-semibold text-slate-800">Customer Service</span>
+                        <span className="text-[9px] text-slate-400 font-bold">›</span>
+                        <Store className="w-3 h-3 text-[#7C3AED]" />
+                        <span className="text-[10.5px] font-semibold text-slate-800 truncate">Store #104 Downtown</span>
                       </div>
 
+                      {/* Sub-Actions Tree */}
                       <div className="ml-4 pl-3 border-l border-dashed border-slate-300 pt-2 space-y-2">
                         <div className="relative flex items-center">
                           <span className="absolute -left-3 top-1/2 w-2.5 border-t border-dashed border-slate-300" />
-                          <div className="border border-slate-200/90 bg-white px-2.5 py-1 rounded-md text-[10px] text-slate-700 flex items-center gap-1 shadow-xs">
-                            <span className="text-[9px] text-slate-400">›</span>
-                            <span>Compensation</span>
+                          <div className="border border-emerald-200 bg-emerald-50/60 px-2 py-0.5 rounded text-[9.5px] text-emerald-800 flex items-center gap-1 font-semibold">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            <span>Replenish (+450)</span>
                           </div>
                         </div>
 
-                        <div className="ml-3 pl-2.5 border-l border-dashed border-slate-300 pt-1">
-                          <div className="relative flex items-center">
-                            <span className="absolute -left-2.5 top-1/2 w-2 border-t border-dashed border-slate-300" />
-                            <div className="border border-slate-200/90 bg-white px-2 py-0.5 rounded text-[10px] text-slate-600 flex items-center gap-1 shadow-xs">
-                              <span className="text-[9px] text-slate-400">›</span>
-                              <span>Refund</span>
-                            </div>
+                        <div className="relative flex items-center">
+                          <span className="absolute -left-3 top-1/2 w-2.5 border-t border-dashed border-slate-300" />
+                          <div className="border border-purple-200 bg-purple-50/60 px-2 py-0.5 rounded text-[9.5px] text-purple-800 flex items-center gap-1 font-semibold">
+                            <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                            <span>Transfer Inventory</span>
+                          </div>
+                        </div>
+
+                        <div className="relative flex items-center">
+                          <span className="absolute -left-3 top-1/2 w-2.5 border-t border-dashed border-slate-300" />
+                          <div className="border border-amber-200 bg-amber-50/60 px-2 py-0.5 rounded text-[9.5px] text-amber-800 flex items-center gap-1 font-semibold">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            <span>Markdown (-15%)</span>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="pt-2 space-y-2">
+                    <div className="pt-2 space-y-1.5">
                       <div className="border border-slate-200/80 bg-white px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 text-slate-600">
-                        <span className="text-[10px] text-slate-400">›</span>
-                        <span className="text-[11px] font-medium">App Interface</span>
+                        <span className="text-[9px] text-slate-400">›</span>
+                        <span className="text-[10.5px]">Store #208 Westside Mall</span>
                       </div>
                       <div className="border border-slate-200/80 bg-white px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 text-slate-600">
-                        <span className="text-[10px] text-slate-400">›</span>
-                        <span className="text-[11px] font-medium">Privacy and Safety</span>
+                        <span className="text-[9px] text-slate-400">›</span>
+                        <span className="text-[10.5px]">Online Fulfillment DC-1</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Right Panel: Feed Details */}
-                <div className="col-span-7 p-5 bg-[#FBFBFC] flex flex-col justify-between rounded-r-2xl">
+                {/* Right Panel: Decision Feed & Reasoning */}
+                <div className="col-span-7 p-4 sm:p-5 bg-[#FBFBFC] flex flex-col justify-between rounded-r-2xl">
                   <div>
-                    <div className="flex items-center justify-between pb-3">
-                      <div className="flex items-center gap-1 text-slate-800 font-bold text-[14px]">
-                        <span className="text-slate-400 font-semibold text-[15px]">#</span>
-                        <span>Customer Service</span>
+                    <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
+                      <div className="flex items-center gap-1.5 text-slate-800 font-bold text-[13px]">
+                        <span className="text-slate-400 font-semibold text-[14px]">#</span>
+                        <span>Store #104 Actions</span>
                       </div>
-                      <button className="bg-[#5244E9] hover:bg-[#4637DB] transition-colors text-white text-[11px] font-medium px-2.5 py-1 rounded-md flex items-center gap-1 shadow-sm">
-                        <Share2 className="w-2.5 h-2.5 stroke-[2.5]" />
-                        <span>Share</span>
+                      <button className="bg-[#5244E9] hover:bg-[#4637DB] transition-colors text-white text-[10.5px] font-semibold px-2.5 py-1 rounded-md flex items-center gap-1 shadow-xs">
+                        <RefreshCw className="w-2.5 h-2.5 stroke-[2.5]" />
+                        <span>Re-Reason</span>
                       </button>
                     </div>
 
-                    <div className="flex items-center gap-5 border-b border-slate-200/80 text-[11px] pt-1">
-                      <button className="font-bold text-slate-900 border-b-2 border-slate-900 pb-2 -mb-[1px]">
-                        All feedback (42,430)
-                      </button>
-                      <button className="font-medium text-slate-400 hover:text-slate-600 pb-2">
-                        Not classified 1,273 (3%)
-                      </button>
-                    </div>
-
-                    <div className="mt-4 space-y-3.5">
-                      <div className="bg-white p-3 rounded-xl border border-slate-200/70 shadow-xs space-y-2">
+                    {/* Prescribed Action Cards */}
+                    <div className="mt-3 space-y-2.5">
+                      
+                      {/* Action Card 1: Urgent Replenish */}
+                      <div className="bg-white p-2.5 rounded-xl border border-slate-200/80 shadow-2xs space-y-1 text-left">
                         <div className="flex items-center justify-between">
-                          <span className="bg-[#EFF6FF] text-[#2563EB] text-[9px] font-bold px-1.5 py-0.5 rounded">
-                            Issue-1
+                          <span className="bg-emerald-50 text-emerald-700 text-[9px] font-bold px-1.5 py-0.5 rounded border border-emerald-200/60">
+                            REPLENISH (+450 UNITS)
                           </span>
-                          <div className="flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                          </div>
+                          <span className="text-[9px] font-bold text-rose-600">Stockout Risk: 94%</span>
                         </div>
-                        <div className="w-4/5 h-2 bg-slate-200/70 rounded-full" />
-                        <div className="w-3/5 h-2 bg-slate-100 rounded-full" />
+                        <p className="text-[11px] font-bold text-slate-800 leading-tight">
+                          SKU-9824: Cold Brew 12-Pack (CPG Beverage)
+                        </p>
+                        <p className="text-[9.5px] text-slate-500 leading-tight">
+                          <strong className="text-slate-700">Why:</strong> 34°C heatwave surge • 1.6 days of stock • 4-day lead time.
+                        </p>
+                        <div className="text-[9px] font-semibold text-emerald-700 pt-0.5">
+                          Expected Impact: +$14,200 revenue protected
+                        </div>
                       </div>
 
-                      <div className="bg-white p-3 rounded-xl border border-slate-200/70 shadow-xs space-y-2">
+                      {/* Action Card 2: Inventory Transfer */}
+                      <div className="bg-white p-2.5 rounded-xl border border-slate-200/80 shadow-2xs space-y-1 text-left">
                         <div className="flex items-center justify-between">
-                          <span className="bg-[#EEF2FF] text-[#4F46E5] text-[9px] font-bold px-1.5 py-0.5 rounded">
-                            Issue-2
+                          <span className="bg-purple-50 text-purple-700 text-[9px] font-bold px-1.5 py-0.5 rounded border border-purple-200/60">
+                            TRANSFER INVENTORY (180 UNITS)
                           </span>
-                          <div className="flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                          </div>
+                          <span className="text-[9px] font-bold text-blue-600">Balanced Allocation</span>
                         </div>
-                        <div className="w-full h-2 bg-slate-200/70 rounded-full" />
-                        <div className="w-2/3 h-2 bg-slate-100 rounded-full" />
+                        <p className="text-[11px] font-bold text-slate-800 leading-tight">
+                          SKU-4112: Organic Granola Bites (Snack)
+                        </p>
+                        <p className="text-[9.5px] text-slate-500 leading-tight">
+                          <strong className="text-slate-700">Why:</strong> Suburban DC overstocked by 320u; urban store velocity +42%.
+                        </p>
+                        <div className="text-[9px] font-semibold text-purple-700 pt-0.5">
+                          Expected Impact: Cuts holding costs by 22%
+                        </div>
                       </div>
 
-                      <div className="bg-white p-3 rounded-xl border border-slate-200/70 shadow-xs space-y-2 opacity-60">
+                      {/* Action Card 3: Dynamic Markdown */}
+                      <div className="bg-white p-2.5 rounded-xl border border-slate-200/80 shadow-2xs space-y-1 text-left opacity-90">
                         <div className="flex items-center justify-between">
-                          <span className="bg-[#F1F5F9] text-slate-600 text-[9px] font-bold px-1.5 py-0.5 rounded">
-                            Issue-3
+                          <span className="bg-amber-50 text-amber-700 text-[9px] font-bold px-1.5 py-0.5 rounded border border-amber-200/60">
+                            MARKDOWN (-15%)
                           </span>
-                          <div className="flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                          </div>
+                          <span className="text-[9px] font-bold text-amber-600">Preserve Margin</span>
                         </div>
-                        <div className="w-3/4 h-2 bg-slate-200/70 rounded-full" />
+                        <p className="text-[11px] font-bold text-slate-800 leading-tight">
+                          SKU-2041: Seasonal Holiday Confectionery
+                        </p>
+                        <p className="text-[9.5px] text-slate-500 leading-tight">
+                          <strong className="text-slate-700">Why:</strong> Competitor price drop -12% • Expiration in 14 days.
+                        </p>
                       </div>
+
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-end gap-1.5 pt-3">
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                  <div className="flex items-center justify-between text-[9.5px] text-slate-400 pt-2 border-t border-slate-100">
+                    <span>Connected Chain: Demand → Replenish → Margin</span>
+                    <span className="font-bold text-emerald-600">All systems sync</span>
                   </div>
                 </div>
               </div>
 
-              {/* OVERLAY CARD 1: Negative Feedback Alert */}
-              <div className="absolute -bottom-8 -left-5 sm:-left-8 z-20 bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-[0_20px_45px_rgba(15,23,42,0.12)] max-w-[320px] sm:max-w-[335px]">
-                <div className="absolute -top-3.5 left-4 w-7 h-7 bg-[#FEF3C7] rounded-full flex items-center justify-center text-[#D97706] shadow-sm border border-amber-200/60">
-                  <Bell className="w-3.5 h-3.5 stroke-[2.2]" />
+              {/* OVERLAY CARD 1: Autonomous Risk Alert */}
+              <div className="absolute -bottom-8 -left-5 sm:-left-8 z-20 bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-100 shadow-[0_20px_45px_rgba(15,23,42,0.12)] max-w-[310px]">
+                <div className="absolute -top-3 left-4 w-6 h-6 bg-[#FEF3C7] rounded-full flex items-center justify-center text-[#D97706] shadow-xs border border-amber-200">
+                  <AlertTriangle className="w-3 h-3 stroke-[2.2]" />
                 </div>
 
-                <div className="flex items-center gap-2 pt-1 mb-2">
-                  <span className="text-[13px] font-[800] text-slate-900 tracking-tight">
-                    32 negative feedback
+                <div className="flex items-center gap-2 pt-0.5 mb-1.5">
+                  <span className="text-[12px] font-[800] text-slate-900 tracking-tight">
+                    Stockout Prevention Alert
                   </span>
-                  <span className="bg-[#EEF2FF] text-[#4F46E5] text-[10px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
-                    <span>↑</span>
-                    <span>56%</span>
+                  <span className="bg-rose-50 text-rose-700 text-[9px] font-bold px-1.5 py-0.5 rounded border border-rose-200">
+                    Critical
                   </span>
                 </div>
 
-                <p className="text-[11px] text-slate-500 leading-relaxed font-normal">
-                  "Support staff was very supportive and professional,{' '}
-                  <span className="bg-[#FFE4E6] text-[#E11D48] px-1 py-0.5 rounded font-medium">
-                    but the app crashes ..."
-                  </span>
+                <p className="text-[10.5px] text-slate-500 leading-snug font-normal">
+                  SKU-9824 would stock out in <strong className="text-slate-800">36 hours</strong> without replenishment. Action approved automatically.
                 </p>
               </div>
 
-              {/* OVERLAY CARD 2: Sentiment Stacked Bar Chart */}
-              <div className="absolute -bottom-10 -right-4 sm:-right-8 z-20 bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-[0_25px_50px_rgba(15,23,42,0.15)] w-[270px] sm:w-[295px]">
-                <div className="absolute -top-3.5 right-4 z-30 bg-white rounded-full px-2 py-1 shadow-md border border-slate-100 flex items-center gap-1.5">
-                  <span className="w-5 h-5 rounded-full bg-[#10B981] flex items-center justify-center text-white shadow-xs">
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707a1 1 0 00-1.414-1.414A5.98 5.98 0 0110 9a5.98 5.98 0 01-2.293-1.121 1 1 0 10-1.414 1.414A7.98 7.98 0 0010 11a7.98 7.98 0 003.707-1.707z" clipRule="evenodd"/>
-                    </svg>
-                  </span>
-                  <span className="w-5 h-5 rounded-full bg-[#F43F5E] flex items-center justify-center text-white shadow-xs">
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-3.707-6.293a1 1 0 001.414 1.414A5.98 5.98 0 0110 12a5.98 5.98 0 012.293 1.121 1 1 0 001.414-1.414A7.98 7.98 0 0010 10a7.98 7.98 0 00-3.707 1.707z" clipRule="evenodd"/>
-                    </svg>
+              {/* OVERLAY CARD 2: AI vs Baseline Impact Card */}
+              <div className="absolute -bottom-10 -right-4 sm:-right-8 z-20 bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-100 shadow-[0_25px_50px_rgba(15,23,42,0.15)] w-[260px] sm:w-[280px]">
+                <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 mb-2">
+                  <span className="text-[11px] font-bold text-slate-900">AI vs Simple Baseline</span>
+                  <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded">
+                    +18.4% Net Margin
                   </span>
                 </div>
 
-                <div className="space-y-3 pt-2">
-                  <div className="w-full h-3 rounded-full overflow-hidden flex bg-slate-100">
-                    <div style={{ width: '48%' }} className="bg-[#FF6565] h-full" />
-                    <div style={{ width: '22%' }} className="bg-[#FBBF24] h-full" />
-                    <div style={{ width: '30%' }} className="bg-[#2DD4BF] h-full" />
+                <div className="space-y-2">
+                  <div>
+                    <div className="flex justify-between text-[9px] text-slate-600 mb-0.5">
+                      <span>Stockouts Averted</span>
+                      <strong className="text-emerald-600">88.4%</strong>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+                      <div style={{ width: '88.4%' }} className="bg-emerald-500 h-full rounded-full" />
+                    </div>
                   </div>
 
-                  <div className="w-full h-3 rounded-full overflow-hidden flex bg-slate-100">
-                    <div style={{ width: '20%' }} className="bg-[#FF6565] h-full" />
-                    <div style={{ width: '22%' }} className="bg-[#FBBF24] h-full" />
-                    <div style={{ width: '18%' }} className="bg-[#CBD5E1] h-full" />
-                    <div style={{ width: '40%' }} className="bg-[#2DD4BF] h-full" />
+                  <div>
+                    <div className="flex justify-between text-[9px] text-slate-600 mb-0.5">
+                      <span>Excess Inventory Cut</span>
+                      <strong className="text-indigo-600">74.2%</strong>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+                      <div style={{ width: '74.2%' }} className="bg-indigo-500 h-full rounded-full" />
+                    </div>
                   </div>
 
-                  <div className="w-full h-3 rounded-full overflow-hidden flex bg-slate-100">
-                    <div style={{ width: '16%' }} className="bg-[#FF6565] h-full" />
-                    <div style={{ width: '16%' }} className="bg-[#FBBF24] h-full" />
-                    <div style={{ width: '68%' }} className="bg-[#2DD4BF] h-full" />
+                  <div>
+                    <div className="flex justify-between text-[9px] text-slate-600 mb-0.5">
+                      <span>Decision Accuracy</span>
+                      <strong className="text-blue-600">98.1%</strong>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+                      <div style={{ width: '98.1%' }} className="bg-blue-500 h-full rounded-full" />
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-[9px] font-medium text-slate-500 pt-4 mt-1 border-t border-slate-100">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-[#FF6565]" />
-                    <span>Negative</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-[#FBBF24]" />
-                    <span>Neutral</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-[#2DD4BF]" />
-                    <span>Positive</span>
-                  </div>
-                </div>
               </div>
 
             </div>
@@ -383,20 +414,21 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
         </div>
       </main>
 
-      {/* Social Proof / Footer Bar */}
-      <footer className="w-full py-6 sm:py-8 bg-white border-t border-slate-100/60">
-        <div className="max-w-[1360px] mx-auto px-6 sm:px-12 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-7 text-center">
+      {/* Connected Decision Chain Banner / Footer */}
+      <footer className="w-full py-5 sm:py-6 bg-white border-t border-slate-100">
+        <div className="max-w-[1360px] mx-auto px-6 sm:px-12 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
           <div className="flex items-center gap-2">
-            <div className="w-[22px] h-[22px] bg-[#FF6600] rounded-[2px] flex items-center justify-center text-white font-bold text-[13px] leading-none select-none shadow-xs">
-              Y
-            </div>
-            <span className="text-[15px] font-[600] text-[#D97706] tracking-tight">
-              Backed by Y Combinator
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[13px] font-bold text-slate-800">
+              Retail Decision Chain:
+            </span>
+            <span className="text-[12.5px] text-slate-500 hidden md:inline">
+              Demand → Inventory → Replenishment → Logistics → Margin → Customer Experience
             </span>
           </div>
 
-          <div className="text-[15px] font-[500] text-[#64748B] tracking-tight">
-            Trusted by True Customer-Centric Teams
+          <div className="text-[12px] font-semibold text-slate-500">
+            THEME 2: AI for Business • Retail & CPG Decision Intelligence
           </div>
         </div>
       </footer>

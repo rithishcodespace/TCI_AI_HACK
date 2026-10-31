@@ -13,8 +13,8 @@ export default function App() {
     const saved = getStoredUser();
     return saved || {
       name: 'Rithish',
-      email: 'you@college.edu',
-      role: 'student',
+      email: 'rithish@retailcorp.com',
+      role: 'store_manager',
     };
   });
 
@@ -34,8 +34,8 @@ export default function App() {
     clearAuthSession();
     setCurrentUser({
       name: 'Rithish',
-      email: 'you@college.edu',
-      role: 'student',
+      email: 'rithish@retailcorp.com',
+      role: 'store_manager',
     });
     setCurrentView('landing');
   };

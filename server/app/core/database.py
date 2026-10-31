@@ -26,5 +26,5 @@ def get_db():
 
 def init_db():
     """Create all registered database tables if they do not exist."""
-    import app.models  # Ensure all models are imported
+    import app.models  # noqa: F401 - Register models with Base metadata
     Base.metadata.create_all(bind=engine)
