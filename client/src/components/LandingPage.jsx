@@ -3,7 +3,6 @@ import {
   ChevronDown, 
   Menu, 
   X, 
-  Sparkles, 
   LayoutGrid, 
   Share2, 
   Bell, 
@@ -134,12 +133,6 @@ export default function LandingPage({ onLoginClick, onSignupClick }) {
           {/* Left Hero Content */}
           <div className="lg:col-span-5 flex flex-col items-start text-left z-10 lg:pr-2">
             
-            {/* Retail AI Product Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50/90 border border-indigo-200/60 text-[#5244E9] text-[11px] font-bold mb-4 shadow-2xs">
-              <Sparkles className="w-3.5 h-3.5 stroke-[2.2]" />
-              <span>RETAIL AI • AUTONOMOUS DECISION INTELLIGENCE</span>
-            </div>
-
             <h1 className="text-[38px] sm:text-[48px] lg:text-[50px] font-[800] text-[#0F172A] tracking-[-0.03em] leading-[1.12]">
               Turn Enterprise Signals <br />
               into Connected Decisions
